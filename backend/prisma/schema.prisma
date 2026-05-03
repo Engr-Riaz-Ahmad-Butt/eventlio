@@ -1,5 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// ────────────────────────────────────────────────────────────────
+// Eventlio — Prisma Schema
+// Event Vendor Marketplace & CRM
+// ────────────────────────────────────────────────────────────────
 
 generator client {
   provider = "prisma-client-js"
@@ -7,32 +9,477 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
+
+// ── Enums ────────────────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  VENDOR_OWNER
+  VENDOR_STAFF
+  CLIENT
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  JAZZCASH
+  EASYPAISA
+  STRIPE
+  OTHER
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum NotificationType {
+  BOOKING_NEW
+  BOOKING_ACCEPTED
+  BOOKING_REJECTED
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  PAYMENT_RECEIVED
+  EVENT_REMINDER
+  REVIEW_RECEIVED
+  VENDOR_APPROVED
+  GENERAL
+}
+
+enum NotificationChannel {
+  WHATSAPP
+  EMAIL
+  SMS
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  RETRYING
+}
+
+// ── Models ───────────────────────────────────────────────────────
 
 model User {
-  id        String   @id // Clerk User ID
-  email     String   @unique
-  firstName String?
-  lastName  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  events    Event[]
+  id              String   @id @default(cuid())
+  name            String
+  email           String   @unique
+  phone           String?  @unique
+  passwordHash    String
+  role            Role     @default(CLIENT)
+  avatar          String?
+  isEmailVerified Boolean  @default(false)
+  isPhoneVerified Boolean  @default(false)
+  otp             String?
+  otpExpiresAt    DateTime?
+  refreshToken    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  vendorProfile   VendorProfile?
+  clientProfile   ClientProfile?
+  adminLogs       AdminLog[]
+  notifications   Notification[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+  @@map("users")
 }
 
-model Event {
-  id           String   @id @default(cuid())
-  title        String
-  description  String?
-  date         DateTime
-  location     String
-  price        Float    @default(0)
-  maxAttendees Int      @default(0)
-  category     String?
-  
-  creatorId    String
-  creator      User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+model VendorProfile {
+  id             String       @id @default(cuid())
+  userId         String       @unique
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  businessName   String
+  slug           String       @unique
+  description    String?      @db.Text
+  tagline        String?
+
+  city           String
+  address        String?
+  phone          String?
+  whatsappNumber String?
+  instagramUrl   String?
+  facebookUrl    String?
+  websiteUrl     String?
+
+  coverImage     String?
+  logo           String?
+
+  isVerified     Boolean      @default(false)
+  isFeatured     Boolean      @default(false)
+  status         VendorStatus @default(PENDING)
+
+  avgRating      Float        @default(0)
+  totalReviews   Int          @default(0)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  categories     VendorCategory[]
+  packages       VendorPackage[]
+  gallery        VendorGallery[]
+  serviceAreas   ServiceArea[]
+  bookings       Booking[]
+  availability   Availability[]
+  blockedDates   BlockedDate[]
+  reviews        Review[]
+  staff          VendorStaff[]
+
+  @@index([slug])
+  @@index([city])
+  @@index([status])
+  @@index([isFeatured])
+  @@index([avgRating])
+  @@map("vendor_profiles")
+}
+
+model ClientProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  city        String?
+  address     String?
+  phone       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookings    Booking[]
+  reviews     Review[]
+
+  @@map("client_profiles")
+}
+
+model VendorStaff {
+  id            String        @id @default(cuid())
+  vendorId      String
+  vendor        VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  userId        String
+  role          String        @default("staff")
+  permissions   String[]      @default([])
+  createdAt     DateTime      @default(now())
+
+  @@unique([vendorId, userId])
+  @@map("vendor_staff")
+}
+
+// ── Categories ───────────────────────────────────────────────────
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?
+  image       String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vendors     VendorCategory[]
+
+  @@index([slug])
+  @@map("categories")
+}
+
+model VendorCategory {
+  id         String        @id @default(cuid())
+  vendorId   String
+  vendor     VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, categoryId])
+  @@map("vendor_categories")
+}
+
+// ── Packages & Gallery ───────────────────────────────────────────
+
+model VendorPackage {
+  id               String        @id @default(cuid())
+  vendorId         String
+  vendor           VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  title            String
+  description      String?       @db.Text
+  price            Float
+  discountPrice    Float?
+  duration         String?       // e.g. "4 hours", "Full Day"
+  includedServices String[]      @default([])
+  isActive         Boolean       @default(true)
+  sortOrder        Int           @default(0)
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  bookings         Booking[]
+
+  @@index([vendorId])
+  @@map("vendor_packages")
+}
+
+model VendorGallery {
+  id        String        @id @default(cuid())
+  vendorId  String
+  vendor    VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  url       String
+  type      String        @default("image") // image | video
+  caption   String?
+  sortOrder Int           @default(0)
+
+  createdAt DateTime      @default(now())
+
+  @@index([vendorId])
+  @@map("vendor_gallery")
+}
+
+model ServiceArea {
+  id       String        @id @default(cuid())
+  vendorId String
+  vendor   VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  city     String
+  area     String?
+
+  @@unique([vendorId, city])
+  @@map("service_areas")
+}
+
+// ── Bookings ─────────────────────────────────────────────────────
+
+model Booking {
+  id              String        @id @default(cuid())
+  clientId        String
+  client          ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  vendorId        String
+  vendor          VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  packageId       String?
+  package         VendorPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+
+  eventDate       DateTime
+  eventTime       String?
+  eventCity       String
+  eventLocation   String?
+  guestCount      Int?
+  notes           String?       @db.Text
+
+  status          BookingStatus @default(PENDING)
+  totalAmount     Float
+  advanceAmount   Float         @default(0)
+  balanceAmount   Float         @default(0)
+
+  rejectionReason String?
+  cancelledBy     String?
+  cancelReason    String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  statusHistory   BookingStatusHistory[]
+  payments        Payment[]
+  invoices        Invoice[]
+  review          Review?
+
+  @@index([clientId])
+  @@index([vendorId])
+  @@index([eventDate])
+  @@index([status])
+  @@index([createdAt])
+  @@map("bookings")
+}
+
+model BookingStatusHistory {
+  id        String        @id @default(cuid())
+  bookingId String
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  fromStatus BookingStatus?
+  toStatus   BookingStatus
+  changedBy  String        // userId
+  note       String?
+
+  createdAt  DateTime      @default(now())
+
+  @@index([bookingId])
+  @@map("booking_status_history")
+}
+
+// ── Payments & Invoices ──────────────────────────────────────────
+
+model Payment {
+  id            String        @id @default(cuid())
+  bookingId     String
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  amount        Float
+  method        PaymentMethod @default(CASH)
+  status        PaymentStatus @default(PENDING)
+  transactionId String?
+  note          String?
+  paidAt        DateTime?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([bookingId])
+  @@index([status])
+  @@map("payments")
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  invoiceNumber String @unique
+  totalAmount   Float
+  paidAmount    Float  @default(0)
+  balanceAmount Float  @default(0)
+  issuedAt      DateTime @default(now())
+  dueDate       DateTime?
+
+  pdfUrl        String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([bookingId])
+  @@map("invoices")
+}
+
+// ── Calendar & Availability ──────────────────────────────────────
+
+model Availability {
+  id       String        @id @default(cuid())
+  vendorId String
+  vendor   VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  dayOfWeek Int          // 0=Sunday, 6=Saturday
+  startTime String       // "09:00"
+  endTime   String       // "18:00"
+  isActive  Boolean      @default(true)
+
+  @@unique([vendorId, dayOfWeek])
+  @@map("availability")
+}
+
+model BlockedDate {
+  id       String        @id @default(cuid())
+  vendorId String
+  vendor   VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  date     DateTime
+  reason   String?
+
+  createdAt DateTime     @default(now())
+
+  @@unique([vendorId, date])
+  @@index([vendorId, date])
+  @@map("blocked_dates")
+}
+
+// ── Reviews ──────────────────────────────────────────────────────
+
+model Review {
+  id        String        @id @default(cuid())
+  clientId  String
+  client    ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  vendorId  String
+  vendor    VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  bookingId String        @unique
+  booking   Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  rating    Int           // 1-5
+  comment   String?       @db.Text
+  reply     String?       @db.Text
+  repliedAt DateTime?
+
+  isApproved Boolean      @default(true)
+  isFlagged  Boolean      @default(false)
+
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([vendorId])
+  @@index([clientId])
+  @@index([rating])
+  @@map("reviews")
+}
+
+// ── Notifications ────────────────────────────────────────────────
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      NotificationType
+  channel   NotificationChannel @default(IN_APP)
+  title     String
+  body      String              @db.Text
+  data      Json?               // Arbitrary payload
+
+  status    NotificationStatus  @default(PENDING)
+  sentAt    DateTime?
+  readAt    DateTime?
+  retries   Int                 @default(0)
+  error     String?
+
+  createdAt DateTime            @default(now())
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@map("notifications")
+}
+
+// ── Admin ────────────────────────────────────────────────────────
+
+model AdminLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action    String   // e.g. "APPROVE_VENDOR", "SUSPEND_USER"
+  entity    String   // e.g. "vendor_profiles"
+  entityId  String
+  details   Json?
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("admin_logs")
 }

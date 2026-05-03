@@ -1,22 +1,45 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Define which routes are protected. By default, all are public unless specified here.
-const isProtectedRoute = createRouteMatcher([
-  // "/dashboard(.*)", 
-  // "/profile(.*)"
-]);
+// Routes that require authentication
+const protectedRoutes = [
+  '/vendor-dashboard',
+  '/client-dashboard',
+  '/admin',
+];
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    await auth.protect();
+// Routes only accessible when NOT logged in
+const authRoutes = ['/login', '/register', '/verify-otp', '/forgot-password'];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Check for JWT in cookies (set by client-side code)
+  // For SSR/middleware, we rely on a cookie-based approach
+  const token = request.cookies.get('eventlio_access_token')?.value;
+
+  // Redirect authenticated users away from auth pages
+  if (authRoutes.some((route) => pathname.startsWith(route))) {
+    if (token) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    return NextResponse.next();
   }
-});
+
+  // Protect dashboard routes
+  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
+    if (!token) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
+    '/((?!_next|api|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
   ],
 };

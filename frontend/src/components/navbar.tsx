@@ -4,17 +4,21 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { Menu, X, Zap } from "lucide-react";
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { Menu, X, Zap, LogOut, LayoutDashboard, User } from "lucide-react";
+import { useAuthStore } from "@/store/auth-store";
+import { getDashboardPath } from "@/lib/permissions";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navLinks = [
   { label: "Discover", href: "#discover" },
@@ -27,6 +31,7 @@ export function Navbar() {
   const navRef = useRef<HTMLElement>(null);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuthStore();
 
   // Entrance animation
   useEffect(() => {
@@ -44,6 +49,14 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const dashboardPath = user ? getDashboardPath(user.role) : "/";
+  const initials = user?.name
+    ?.split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <header
@@ -82,33 +95,75 @@ export function Navbar() {
 
           {/* CTA */}
           <div className="hidden lg:flex items-center gap-3">
-            <SignedOut>
-              <SignInButton mode="modal">
-                <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground">
-                  Sign in
-                </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button
-                  size="sm"
-                  className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-900/30 border-0"
-                >
-                  Get Started Free
-                </Button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/dashboard">Dashboard</Link>
-              </Button>
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "w-9 h-9 border border-white/20",
-                  },
-                }}
-              />
-            </SignedIn>
+            {!isAuthenticated ? (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground">
+                    Sign in
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-900/30 border-0"
+                  >
+                    Get Started Free
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href={dashboardPath}>
+                  <Button variant="ghost" size="sm" className="text-foreground/70 hover:text-foreground">
+                    <LayoutDashboard className="w-4 h-4 mr-1.5" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <button className="flex items-center gap-2 rounded-full p-0.5 hover:ring-2 ring-violet-500/50 transition-all">
+                      <Avatar className="w-9 h-9 border border-white/20">
+                        <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-600 text-white text-sm font-bold">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 glass-strong border-white/10">
+                    <div className="px-3 py-2">
+                      <p className="text-sm font-semibold">{user?.name}</p>
+                      <p className="text-xs text-foreground/50">{user?.email}</p>
+                    </div>
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuItem
+                      onClick={() => window.location.href = dashboardPath}
+                      className="cursor-pointer"
+                    >
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => window.location.href = "/profile"}
+                      className="cursor-pointer"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuItem
+                      onClick={() => {
+                        logout();
+                        window.location.href = "/";
+                      }}
+                      className="text-red-400 cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
           </div>
 
           {/* Mobile toggle */}
@@ -136,24 +191,45 @@ export function Navbar() {
               </Link>
             ))}
             <div className="border-t border-white/10 mt-2 pt-3 flex flex-col gap-2">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button variant="ghost" size="sm" className="justify-start w-full">Sign in</Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button size="sm" className="bg-gradient-to-r w-full from-violet-600 to-indigo-600 text-white border-0">
-                    Get Started Free
+              {!isAuthenticated ? (
+                <>
+                  <Link href="/login" onClick={() => setMobileOpen(false)}>
+                    <Button variant="ghost" size="sm" className="justify-start w-full">
+                      Sign in
+                    </Button>
+                  </Link>
+                  <Link href="/register" onClick={() => setMobileOpen(false)}>
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r w-full from-violet-600 to-indigo-600 text-white border-0"
+                    >
+                      Get Started Free
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href={dashboardPath} onClick={() => setMobileOpen(false)}>
+                    <Button variant="ghost" size="sm" className="justify-start w-full">
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start w-full text-red-400"
+                    onClick={() => {
+                      logout();
+                      setMobileOpen(false);
+                      window.location.href = "/";
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign out
                   </Button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <Button variant="ghost" size="sm" className="justify-start w-full" asChild>
-                  <Link href="/dashboard">Dashboard</Link>
-                </Button>
-                <div className="px-4 py-2">
-                  <UserButton />
-                </div>
-              </SignedIn>
+                </>
+              )}
             </div>
           </div>
         )}

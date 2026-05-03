@@ -15,18 +15,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Eventlio — Discover & Manage Events",
+  title: "Eventlio — The Operating System for Event Businesses",
   description:
-    "Eventlio is the modern platform to discover, create, and manage events. Beautiful experiences, seamless organisation.",
-  keywords: ["events", "ticketing", "event management", "eventlio"],
+    "Eventlio is the modern marketplace to discover, book, and manage event service providers. Built for salons, photographers, decorators, caterers, and more.",
+  keywords: [
+    "events",
+    "vendor marketplace",
+    "event management",
+    "eventlio",
+    "wedding vendors",
+    "event services",
+  ],
   openGraph: {
-    title: "Eventlio — Discover & Manage Events",
-    description: "The modern platform to discover, create, and manage events.",
+    title: "Eventlio — The Operating System for Event Businesses",
+    description:
+      "Discover, book, and manage event service providers — all in one platform.",
     type: "website",
   },
 };
-
-import { ClerkProvider } from "@clerk/nextjs";
 
 export default function RootLayout({
   children,
@@ -34,16 +40,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <head />
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <QueryProvider>
-            {children}
-            <Toaster richColors position="top-right" />
-          </QueryProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <head />
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <QueryProvider>
+          {children}
+          <Toaster richColors position="top-right" />
+        </QueryProvider>
+      </body>
+    </html>
   );
 }
