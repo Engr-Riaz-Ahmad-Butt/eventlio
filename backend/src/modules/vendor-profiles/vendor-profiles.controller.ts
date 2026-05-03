@@ -30,13 +30,6 @@ export class VendorProfilesController {
     return this.vendorProfilesService.findAll({ city, category, search });
   }
 
-  @Public()
-  @Get(':slug')
-  @ApiOperation({ summary: 'Get a public vendor profile by slug' })
-  async findBySlug(@Param('slug') slug: string) {
-    return this.vendorProfilesService.findBySlug(slug);
-  }
-
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.VENDOR_OWNER)
   @Get('me/profile')
@@ -56,5 +49,12 @@ export class VendorProfilesController {
     @Body() dto: UpdateVendorProfileDto,
   ) {
     return this.vendorProfilesService.update(userId, dto);
+  }
+
+  @Public()
+  @Get(':slug')
+  @ApiOperation({ summary: 'Get a public vendor profile by slug' })
+  async findBySlug(@Param('slug') slug: string) {
+    return this.vendorProfilesService.findBySlug(slug);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { UpdateUserDto } from './dto';
 
@@ -26,12 +26,12 @@ export class UsersService {
   async onboardVendor(userId: string, dto: import('./dto').OnboardVendorDto) {
     const existing = await this.prisma.vendorProfile.findUnique({ where: { userId } });
     if (existing) {
-      throw new import('@nestjs/common').ConflictException('Vendor profile already exists');
+      throw new ConflictException('Vendor profile already exists');
     }
 
     const slugExists = await this.prisma.vendorProfile.findUnique({ where: { slug: dto.slug } });
     if (slugExists) {
-      throw new import('@nestjs/common').ConflictException('Slug is already taken');
+      throw new ConflictException('Slug is already taken');
     }
 
     const profile = await this.prisma.vendorProfile.create({
@@ -110,6 +110,10 @@ export class UsersService {
         },
       });
     });
+
+    if (!updated) {
+      throw new NotFoundException('Updated user could not be loaded');
+    }
 
     const { passwordHash, otp, otpExpiresAt, refreshToken, ...sanitized } = updated;
     return sanitized;

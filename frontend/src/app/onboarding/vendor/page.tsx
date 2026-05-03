@@ -68,7 +68,7 @@ export default function VendorOnboardingPage() {
     event.preventDefault();
     setIsSaving(true);
     try {
-      const response = await api.patch("/vendor-profiles/me/profile", {
+      await api.patch("/vendor-profiles/me/profile", {
         businessName: form.businessName,
         slug: form.slug || generatedSlug,
         city: form.city,

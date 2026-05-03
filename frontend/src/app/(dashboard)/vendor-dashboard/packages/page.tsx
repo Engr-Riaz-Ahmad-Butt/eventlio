@@ -24,7 +24,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 
@@ -113,12 +112,14 @@ export default function PackagesPage() {
           setIsDialogOpen(open);
           if (!open) setEditingPackage(null);
         }}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl px-6 h-11">
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Package
-            </Button>
-          </DialogTrigger>
+          <Button
+            type="button"
+            onClick={() => setIsDialogOpen(true)}
+            className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-xl px-6 h-11"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Package
+          </Button>
           <DialogContent className="bg-[#0b081a] border-white/10 text-white sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">
