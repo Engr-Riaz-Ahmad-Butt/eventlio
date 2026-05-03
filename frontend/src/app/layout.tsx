@@ -1,49 +1,60 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  JetBrains_Mono,
+  Playfair_Display,
+  Plus_Jakarta_Sans,
+} from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const playfair = Playfair_Display({
   subsets: ["latin"],
+  variable: "--font-playfair",
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
+  variable: "--font-jakarta",
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "Eventlio — The Operating System for Event Businesses",
+  title: "Eventlio | The Business OS for Event Vendors",
   description:
-    "Eventlio is the modern marketplace to discover, book, and manage event service providers. Built for salons, photographers, decorators, caterers, and more.",
+    "Pakistan ka pehla premium vendor marketplace and business operating system for bridal salons, makeup artists, photographers, decorators, caterers, and event teams.",
   keywords: [
-    "events",
-    "vendor marketplace",
-    "event management",
-    "eventlio",
-    "wedding vendors",
-    "event services",
+    "Eventlio",
+    "Pakistan wedding vendors",
+    "vendor CRM",
+    "event marketplace",
+    "bridal makeup software",
+    "photographer booking platform",
   ],
   openGraph: {
-    title: "Eventlio — The Operating System for Event Businesses",
+    title: "Eventlio | The Business OS for Event Vendors",
     description:
-      "Discover, book, and manage event service providers — all in one platform.",
+      "Manage bookings, track payments, and grow your event business with Pakistan-first discovery and operations.",
     type: "website",
   },
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${playfair.variable} ${jakarta.variable} ${mono.variable} font-body text-[15px] text-[var(--dark)]`}
       >
         <QueryProvider>
           {children}
