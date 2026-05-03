@@ -30,7 +30,7 @@ export default function ForgotPasswordPage() {
     try {
       await api.post("/auth/forgot-password", data);
       toast.success("If this email exists, a reset code has been sent.");
-      // TODO: Navigate to reset password page
+      router.push(`/reset-password?email=${encodeURIComponent(data.email)}`);
     } catch {
       toast.error("Something went wrong. Please try again.");
     } finally {

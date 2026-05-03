@@ -89,6 +89,7 @@ export class AuthService {
   async verifyOtp(dto: VerifyOtpDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      include: { vendorProfile: true, clientProfile: true },
     });
 
     if (!user) {
@@ -130,6 +131,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      include: { vendorProfile: true, clientProfile: true },
     });
 
     if (!user) {
@@ -231,6 +233,7 @@ export class AuthService {
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
+        include: { vendorProfile: true, clientProfile: true },
       });
 
       if (!user || user.refreshToken !== dto.refreshToken) {

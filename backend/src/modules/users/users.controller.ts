@@ -2,13 +2,14 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
   Body,
   UseGuards,
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { UpdateUserDto } from './dto';
+import { UpdateUserDto, OnboardVendorDto, OnboardClientDto } from './dto';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { JwtAuthGuard, RolesGuard } from '../../common/guards';
 import { Role } from '@prisma/client';
@@ -24,6 +25,26 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current user profile' })
   async getMe(@CurrentUser('id') userId: string) {
     return this.usersService.findById(userId);
+  }
+
+  @Post('onboard/vendor')
+  @Roles(Role.VENDOR_OWNER)
+  @ApiOperation({ summary: 'Initialize vendor profile' })
+  async onboardVendor(
+    @CurrentUser('id') userId: string,
+    @Body() dto: OnboardVendorDto,
+  ) {
+    return this.usersService.onboardVendor(userId, dto);
+  }
+
+  @Post('onboard/client')
+  @Roles(Role.CLIENT)
+  @ApiOperation({ summary: 'Initialize client profile' })
+  async onboardClient(
+    @CurrentUser('id') userId: string,
+    @Body() dto: OnboardClientDto,
+  ) {
+    return this.usersService.onboardClient(userId, dto);
   }
 
   @Patch('me')

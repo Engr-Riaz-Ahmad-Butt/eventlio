@@ -43,6 +43,16 @@ function VerifyOtpContent() {
       document.cookie = `eventlio_access_token=${accessToken}; path=/; max-age=900; SameSite=Lax`;
 
       toast.success("Email verified! Welcome to Eventlio! 🎉");
+
+      if (user.role === "VENDOR_OWNER" && !user.vendorProfile) {
+        router.push("/onboarding");
+        return;
+      }
+      if (user.role === "CLIENT" && !user.clientProfile?.city) {
+        router.push("/onboarding");
+        return;
+      }
+
       router.push(getDashboardPath(user.role));
     } catch (error: any) {
       const message =

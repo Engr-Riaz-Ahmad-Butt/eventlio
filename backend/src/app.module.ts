@@ -8,6 +8,12 @@ import { UsersModule } from './modules/users/users.module';
 import { JwtAuthGuard, RolesGuard } from './common/guards';
 import { GlobalExceptionFilter } from './common/filters';
 import { TransformInterceptor } from './common/interceptors';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { VendorProfilesModule } from './modules/vendor-profiles/vendor-profiles.module';
+import { VendorPackagesModule } from './modules/vendor-packages/vendor-packages.module';
+import { VendorGalleryModule } from './modules/vendor-gallery/vendor-gallery.module';
+import { ServiceAreasModule } from './modules/service-areas/service-areas.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 
 @Module({
   imports: [
@@ -31,6 +37,12 @@ import { TransformInterceptor } from './common/interceptors';
     // Feature modules
     AuthModule,
     UsersModule,
+    CategoriesModule,
+    VendorProfilesModule,
+    VendorPackagesModule,
+    VendorGalleryModule,
+    ServiceAreasModule,
+    UploadsModule,
   ],
   providers: [
     // Global JWT Auth Guard — all routes protected by default
