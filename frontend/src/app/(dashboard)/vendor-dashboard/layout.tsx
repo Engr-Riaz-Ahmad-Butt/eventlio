@@ -1,103 +1,68 @@
 "use client";
 
-import Link from "next/link";
+import { Bell, Menu, UserRound } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  User, 
-  Image as ImageIcon, 
-  Package, 
-  MapPin, 
-  Settings, 
-  ExternalLink,
-  ChevronRight
-} from "lucide-react";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 import { useAuthStore } from "@/store/auth-store";
 
-const navItems = [
-  { href: "/vendor-dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/vendor-dashboard/profile", label: "Business Profile", icon: User },
-  { href: "/vendor-dashboard/portfolio", label: "Portfolio & Gallery", icon: ImageIcon },
-  { href: "/vendor-dashboard/packages", label: "Packages & Pricing", icon: Package },
-  { href: "/vendor-dashboard/areas", label: "Service Areas", icon: MapPin },
-  { href: "/vendor-dashboard/settings", label: "Settings", icon: Settings },
-];
+const labels: Record<string, string> = {
+  "/vendor-dashboard": "Dashboard",
+  "/vendor-dashboard/profile": "Profile & Gallery",
+  "/vendor-dashboard/packages": "Bookings",
+  "/vendor-dashboard/portfolio": "Clients",
+  "/vendor-dashboard/areas": "Payments",
+};
 
-export default function VendorLayout({ children }: { children: React.ReactNode }) {
+export default function VendorDashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const { user } = useAuthStore();
 
   return (
-    <div className="min-h-screen bg-[#030014] text-white flex">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-white/10 bg-[#030014]/50 backdrop-blur-xl hidden lg:flex flex-col sticky top-0 h-screen">
-        <div className="p-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-              <span className="text-white font-bold text-xl">E</span>
+    <div className="min-h-screen bg-[var(--warm-white)] lg:flex">
+      <Sidebar />
+      <main className="min-w-0 flex-1">
+        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-[color:rgba(27,77,62,0.08)] bg-white/90 px-5 shadow-[var(--shadow-sm)] backdrop-blur-md sm:px-8">
+          <div className="flex items-center gap-3">
+            <button className="flex h-10 w-10 items-center justify-center rounded-full border border-[color:rgba(27,77,62,0.08)] text-[var(--primary-dark)] lg:hidden">
+              <Menu className="h-5 w-5" />
+            </button>
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-[var(--gray-text)]">
+                Vendor Workspace
+              </p>
+              <h1 className="font-heading text-2xl text-[var(--dark)]">
+                {labels[pathname] ?? "Dashboard"}
+              </h1>
             </div>
-            <span className="text-xl font-bold tracking-tight">Eventlio</span>
-          </Link>
-        </div>
+          </div>
 
-        <nav className="flex-1 px-4 py-4 space-y-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive 
-                    ? "bg-violet-500/10 text-violet-400 border border-violet-500/20" 
-                    : "text-foreground/60 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <item.icon className={`w-5 h-5 ${isActive ? "text-violet-400" : "text-foreground/40"}`} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="p-4 border-t border-white/10">
-          {user?.vendorProfile?.slug && (
-            <Link
-              href={`/vendors/${user.vendorProfile.slug}`}
-              target="_blank"
-              className="flex items-center justify-between w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <ExternalLink className="w-4 h-4 text-violet-400" />
-                <span className="text-xs font-medium">View Public Page</span>
+          <div className="flex items-center gap-3">
+            <button className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[color:rgba(27,77,62,0.08)] text-[var(--primary-dark)]">
+              <Bell className="h-4 w-4" />
+              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-[var(--gold)]" />
+            </button>
+            <div className="hidden rounded-full bg-[color:rgba(37,211,102,0.14)] px-4 py-2 text-sm font-medium text-[var(--whatsapp)] sm:block">
+              WhatsApp Connected
+            </div>
+            <div className="flex items-center gap-3 rounded-full border border-[color:rgba(27,77,62,0.08)] bg-[var(--warm-white)] px-3 py-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--primary-subtle)] text-[var(--primary-dark)]">
+                <UserRound className="h-4 w-4" />
               </div>
-              <ChevronRight className="w-4 h-4 text-foreground/30 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-          )}
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 border-b border-white/10 flex items-center justify-between px-8 bg-[#030014]/50 backdrop-blur-xl sticky top-0 z-40">
-          <h2 className="text-sm font-medium text-foreground/60">
-            {navItems.find(item => item.href === pathname)?.label || "Dashboard"}
-          </h2>
-          
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-semibold">{user?.name}</p>
-              <p className="text-xs text-foreground/40 uppercase tracking-wider">{user?.role?.replace("_", " ")}</p>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-indigo-600/20 border border-violet-500/30 flex items-center justify-center">
-              <User className="w-5 h-5 text-violet-400" />
+              <div className="hidden sm:block">
+                <p className="text-sm font-semibold text-[var(--dark)]">{user?.name ?? "Vendor User"}</p>
+                <p className="text-xs uppercase tracking-[0.18em] text-[var(--gray-text)]">
+                  {user?.vendorProfile?.businessName ?? "Eventlio Vendor"}
+                </p>
+              </div>
             </div>
           </div>
         </header>
 
-        <div className="p-8 max-w-7xl mx-auto w-full">
-          {children}
-        </div>
+        <div className="section-shell py-8">{children}</div>
       </main>
     </div>
   );

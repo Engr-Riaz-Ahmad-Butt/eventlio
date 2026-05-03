@@ -1,177 +1,152 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import api from "@/lib/api";
-import type { VendorProfile } from "@/types";
-import { ExternalLink, Loader2, MapPin, Phone } from "lucide-react";
+import { notFound } from "next/navigation";
+import { Clock3, MapPin, ShieldCheck, Star } from "lucide-react";
+import { getVendorBySlug } from "@/data/mock";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
-export default function PublicVendorProfilePage() {
-  const params = useParams<{ slug: string }>();
-  const [vendor, setVendor] = useState<VendorProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadVendor() {
-      setIsLoading(true);
-      try {
-        const response = await api.get(`/vendor-profiles/${params.slug}`);
-        setVendor(response.data.data);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    void loadVendor();
-  }, [params.slug]);
-
-  if (isLoading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
-      </main>
-    );
-  }
+export default async function VendorProfilePage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const vendor = getVendorBySlug(slug);
 
   if (!vendor) {
-    return (
-      <main className="min-h-screen px-6 py-10">
-        <div className="mx-auto max-w-3xl glass rounded-[2rem] p-8">
-          <h1 className="text-3xl font-black">Vendor not found</h1>
-          <p className="mt-3 text-sm text-foreground/70">This public vendor profile is unavailable right now.</p>
-          <Link href="/" className="mt-6 inline-flex rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
-            Back to homepage
-          </Link>
-        </div>
-      </main>
-    );
+    notFound();
   }
 
   return (
-    <main className="min-h-screen px-6 py-10">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <section className="glass overflow-hidden rounded-[2rem]">
-          {vendor.coverImage ? (
-            <img src={vendor.coverImage} alt={vendor.businessName} className="h-64 w-full object-cover sm:h-80" />
-          ) : (
-            <div className="h-64 w-full bg-gradient-to-br from-violet-500/30 to-cyan-500/20 sm:h-80" />
-          )}
-          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.2fr_0.8fr]">
-            <div>
-              <div className="flex items-center gap-4">
-                {vendor.logo ? (
-                  <img src={vendor.logo} alt={`${vendor.businessName} logo`} className="h-20 w-20 rounded-2xl object-cover ring-4 ring-black/20" />
-                ) : null}
-                <div>
-                  <h1 className="text-3xl font-black">{vendor.businessName}</h1>
-                  <p className="mt-1 text-sm text-violet-200">{vendor.tagline || vendor.city}</p>
+    <main className="market-shell min-h-screen pb-24">
+      <section className={`relative h-[340px] bg-gradient-to-br ${vendor.gradient}`}>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,31,23,0.1),rgba(10,31,23,0.72))]" />
+        <div className="section-shell relative flex h-full items-end pb-12 text-white">
+          <div className="max-w-4xl">
+            <Badge variant="gold">{vendor.badge}</Badge>
+            <h1 className="display-h1 mt-5 text-white">{vendor.name}</h1>
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-white/80">
+              <span className="rounded-full border border-white/15 px-3 py-1">{vendor.category}</span>
+              <span className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {vendor.city}
+              </span>
+              <span className="flex items-center gap-1">
+                <Star className="h-4 w-4 fill-[var(--gold)] text-[var(--gold)]" />
+                {vendor.rating} ({vendor.reviews} reviews)
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="section-shell -mt-10">
+        <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+          <div className="space-y-8">
+            <section className="rounded-[28px] border border-[color:rgba(27,77,62,0.08)] bg-white p-6 shadow-[var(--shadow-md)] sm:p-8">
+              <div className="grid gap-4 sm:grid-cols-4">
+                <div className="rounded-[22px] bg-[var(--warm-white)] p-4">
+                  <p className="text-xs uppercase tracking-[0.24em] text-[var(--gray-text)]">Rating</p>
+                  <p className="mt-3 font-mono-ui text-2xl text-[var(--dark)]">{vendor.rating}</p>
+                </div>
+                <div className="rounded-[22px] bg-[var(--warm-white)] p-4">
+                  <p className="text-xs uppercase tracking-[0.24em] text-[var(--gray-text)]">Reviews</p>
+                  <p className="mt-3 font-mono-ui text-2xl text-[var(--dark)]">{vendor.reviews}</p>
+                </div>
+                <div className="rounded-[22px] bg-[var(--warm-white)] p-4">
+                  <p className="text-xs uppercase tracking-[0.24em] text-[var(--gray-text)]">Response</p>
+                  <p className="mt-3 text-sm font-semibold text-[var(--dark)]">{vendor.responseTime}</p>
+                </div>
+                <div className="rounded-[22px] bg-[var(--warm-white)] p-4">
+                  <p className="text-xs uppercase tracking-[0.24em] text-[var(--gray-text)]">Events Done</p>
+                  <p className="mt-3 font-mono-ui text-2xl text-[var(--dark)]">{vendor.eventsDone}+</p>
                 </div>
               </div>
+            </section>
 
-              <p className="mt-6 max-w-3xl text-sm leading-7 text-foreground/75">
-                {vendor.description || "This vendor has not added a public business description yet."}
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {vendor.categories?.map((item) => (
-                  <span key={item.id} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs">
-                    {item.category?.name}
-                  </span>
+            <section className="rounded-[28px] border border-[color:rgba(27,77,62,0.08)] bg-white p-6 shadow-[var(--shadow-sm)] sm:p-8">
+              <h2 className="font-heading text-3xl text-[var(--dark)]">Packages</h2>
+              <div className="mt-6 grid gap-5 md:grid-cols-3">
+                {vendor.packages.map((pkg) => (
+                  <article
+                    key={pkg.name}
+                    className="rounded-[24px] border border-[color:rgba(27,77,62,0.08)] bg-[var(--warm-white)] p-5"
+                  >
+                    <p className="text-sm uppercase tracking-[0.22em] text-[var(--gold-dark)]">{pkg.name}</p>
+                    <p className="mt-3 font-mono-ui text-2xl text-[var(--dark)]">
+                      PKR {pkg.price.toLocaleString()}
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-[var(--gray-text)]">{pkg.summary}</p>
+                  </article>
                 ))}
               </div>
-            </div>
+            </section>
 
-            <div className="rounded-[1.5rem] border border-white/10 bg-black/20 p-5">
-              <h2 className="text-lg font-bold">Contact details</h2>
-              <div className="mt-4 space-y-3 text-sm text-foreground/75">
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-violet-300" />
-                  {vendor.city}
-                </p>
-                {vendor.phone ? (
-                  <p className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-violet-300" />
-                    {vendor.phone}
-                  </p>
-                ) : null}
-                {vendor.instagramUrl ? (
-                  <a href={vendor.instagramUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-violet-300 hover:text-violet-200">
-                    <ExternalLink className="h-4 w-4" />
-                    Instagram
-                  </a>
-                ) : null}
-                {vendor.facebookUrl ? (
-                  <a href={vendor.facebookUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-violet-300 hover:text-violet-200">
-                    <ExternalLink className="h-4 w-4" />
-                    Facebook
-                  </a>
-                ) : null}
+            <section className="rounded-[28px] border border-[color:rgba(27,77,62,0.08)] bg-white p-6 shadow-[var(--shadow-sm)] sm:p-8">
+              <h2 className="font-heading text-3xl text-[var(--dark)]">Gallery</h2>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {vendor.gallery.map((image, index) => (
+                  <img
+                    key={`${vendor.id}-${index}`}
+                    src={image}
+                    alt={`${vendor.name} gallery ${index + 1}`}
+                    className="h-64 w-full rounded-[22px] object-cover"
+                  />
+                ))}
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-          <div className="glass rounded-[2rem] p-6 sm:p-8">
-            <h2 className="text-2xl font-bold">Portfolio gallery</h2>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              {vendor.gallery?.length ? vendor.gallery.map((item) => (
-                <div key={item.id} className="rounded-[1.5rem] border border-white/10 bg-white/5 p-3">
-                  <img src={item.url} alt={item.caption || vendor.businessName} className="h-56 w-full rounded-xl object-cover" />
-                  <p className="mt-3 text-sm text-foreground/75">{item.caption || "Eventlio portfolio item"}</p>
-                </div>
-              )) : (
-                <p className="text-sm text-foreground/60">Gallery items will appear here once the vendor uploads them.</p>
-              )}
-            </div>
-          </div>
+            <section className="rounded-[28px] border border-[color:rgba(27,77,62,0.08)] bg-white p-6 shadow-[var(--shadow-sm)] sm:p-8">
+              <h2 className="font-heading text-3xl text-[var(--dark)]">About</h2>
+              <p className="mt-5 leading-8 text-[var(--gray-text)]">{vendor.about}</p>
+            </section>
 
-          <div className="space-y-6">
-            <section className="glass rounded-[2rem] p-6 sm:p-8">
-              <h2 className="text-2xl font-bold">Packages and pricing</h2>
+            <section className="rounded-[28px] border border-[color:rgba(27,77,62,0.08)] bg-white p-6 shadow-[var(--shadow-sm)] sm:p-8">
+              <h2 className="font-heading text-3xl text-[var(--dark)]">Reviews</h2>
               <div className="mt-6 space-y-4">
-                {vendor.packages?.length ? vendor.packages.map((item) => (
-                  <div key={item.id} className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-lg font-bold">{item.title}</p>
-                        <p className="mt-2 text-sm text-foreground/70">{item.description}</p>
-                        {item.includedServices?.length ? (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {item.includedServices.map((service) => (
-                              <span key={service} className="rounded-full border border-white/10 px-3 py-1 text-xs">
-                                {service}
-                              </span>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-black">PKR {item.price.toLocaleString()}</p>
-                        {item.duration ? <p className="text-xs text-foreground/55">{item.duration}</p> : null}
-                      </div>
-                    </div>
+                {[
+                  "Highly professional team and very calm on the event day.",
+                  "Packages were clear and response was fast on WhatsApp.",
+                  "Good coordination and visuals stayed premium throughout the event.",
+                ].map((review) => (
+                  <div
+                    key={review}
+                    className="rounded-[22px] border border-[color:rgba(27,77,62,0.08)] bg-[var(--warm-white)] p-5"
+                  >
+                    <div className="font-mono-ui text-[var(--gold-dark)]">★★★★★</div>
+                    <p className="mt-3 leading-7 text-[var(--gray-text)]">{review}</p>
                   </div>
-                )) : (
-                  <p className="text-sm text-foreground/60">Packages will appear here after the vendor adds them.</p>
-                )}
-              </div>
-            </section>
-
-            <section className="glass rounded-[2rem] p-6 sm:p-8">
-              <h2 className="text-2xl font-bold">Service areas</h2>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {vendor.serviceAreas?.length ? vendor.serviceAreas.map((area) => (
-                  <span key={area.id} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm">
-                    {area.city}{area.area ? `, ${area.area}` : ""}
-                  </span>
-                )) : (
-                  <p className="text-sm text-foreground/60">No service areas added yet.</p>
-                )}
+                ))}
               </div>
             </section>
           </div>
-        </section>
+
+          <aside className="h-fit rounded-[28px] border border-[color:rgba(27,77,62,0.08)] bg-white p-6 shadow-[var(--shadow-md)] lg:sticky lg:top-24">
+            <p className="text-sm uppercase tracking-[0.24em] text-[var(--gray-text)]">Starting from</p>
+            <p className="mt-3 font-mono-ui text-3xl text-[var(--gold-dark)]">
+              PKR {vendor.startingPrice.toLocaleString()}
+            </p>
+            <p className="mt-4 text-sm leading-7 text-[var(--gray-text)]">{vendor.tagline}</p>
+
+            <div className="mt-6 space-y-3 text-sm text-[var(--gray-text)]">
+              <p className="flex items-center gap-2">
+                <Clock3 className="h-4 w-4 text-[var(--primary)]" />
+                Response time: {vendor.responseTime}
+              </p>
+              <p className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-[var(--primary)]" />
+                Contact details unlocked after booking confirmation
+              </p>
+            </div>
+
+            <Button variant="gold" size="xl" className="mt-8 w-full">
+              Booking Request Bhejo →
+            </Button>
+            <Button variant="outline" size="xl" className="mt-3 w-full" asChild>
+              <Link href="/vendors">Back to Vendors</Link>
+            </Button>
+          </aside>
+        </div>
       </div>
     </main>
   );

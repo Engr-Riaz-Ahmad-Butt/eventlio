@@ -10,12 +10,16 @@ if (typeof window !== "undefined") {
 export { gsap, ScrollTrigger };
 
 export function revealOnScroll(
-  elements: string | Element | Element[],
+  elements: string | Element | Element[] | NodeListOf<Element>,
   options: gsap.TweenVars = {},
 ) {
-  const trigger = Array.isArray(elements) ? elements[0] : elements;
+  const normalized =
+    typeof elements === "string" || elements instanceof Element
+      ? elements
+      : Array.from(elements);
+  const trigger = Array.isArray(normalized) ? normalized[0] : normalized;
 
-  return gsap.from(elements, {
+  return gsap.from(normalized, {
     y: 50,
     opacity: 0,
     duration: 0.8,
