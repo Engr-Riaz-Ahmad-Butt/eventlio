@@ -1,5 +1,15 @@
 import { TOKEN_KEY, REFRESH_TOKEN_KEY } from './constants';
 
+function setCookie(name: string, value: string, maxAgeSeconds: number): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=${value}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax`;
+}
+
+function clearCookie(name: string): void {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+}
+
 export function getAccessToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(TOKEN_KEY);
@@ -13,11 +23,15 @@ export function getRefreshToken(): string | null {
 export function setTokens(accessToken: string, refreshToken: string): void {
   localStorage.setItem(TOKEN_KEY, accessToken);
   localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  setCookie(TOKEN_KEY, accessToken, 60 * 15);
+  setCookie(REFRESH_TOKEN_KEY, refreshToken, 60 * 60 * 24 * 7);
 }
 
 export function clearTokens(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
+  clearCookie(TOKEN_KEY);
+  clearCookie(REFRESH_TOKEN_KEY);
 }
 
 export function isAuthenticated(): boolean {

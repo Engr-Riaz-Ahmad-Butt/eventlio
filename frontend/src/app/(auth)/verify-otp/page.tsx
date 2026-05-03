@@ -1,28 +1,27 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { verifyOtpSchema, type VerifyOtpFormData } from "@/schemas/auth.schema";
 import { useAuthStore } from "@/store/auth-store";
 import api from "@/lib/api";
-import { getDashboardPath } from "@/lib/permissions";
+import { getPostAuthPath } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, ShieldCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
 
-import { Suspense } from "react";
-// ... (existing imports, but I will just wrap the component logic inside a sub-component)
 function VerifyOtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const { login } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const {
     register,
@@ -40,26 +39,31 @@ function VerifyOtpContent() {
       const { accessToken, refreshToken, user } = response.data.data;
 
       login(accessToken, refreshToken, user);
-      document.cookie = `eventlio_access_token=${accessToken}; path=/; max-age=900; SameSite=Lax`;
-
-      toast.success("Email verified! Welcome to Eventlio! 🎉");
-
-      if (user.role === "VENDOR_OWNER" && !user.vendorProfile) {
-        router.push("/onboarding");
-        return;
-      }
-      if (user.role === "CLIENT" && !user.clientProfile?.city) {
-        router.push("/onboarding");
-        return;
-      }
-
-      router.push(getDashboardPath(user.role));
+      toast.success("Email verified! Welcome to Eventlio.");
+      router.push(getPostAuthPath(user));
     } catch (error: any) {
       const message =
         error.response?.data?.message || "Verification failed. Please try again.";
-      toast.error(message);
+      toast.error(Array.isArray(message) ? message[0] : message);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    if (!email) {
+      toast.error("Missing email address for resend.");
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      const response = await api.post("/auth/resend-otp", { email });
+      toast.success(response.data.data.message || "A new code has been sent.");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Unable to resend OTP right now.");
+    } finally {
+      setIsResending(false);
     }
   }
 
@@ -110,14 +114,19 @@ function VerifyOtpContent() {
           ) : (
             <ArrowRight className="w-4 h-4 mr-2 group-hover:translate-x-0.5 transition-transform" />
           )}
-          {isLoading ? "Verifying..." : "Verify & Continue"}
+          {isLoading ? "Verifying..." : "Verify and continue"}
         </Button>
       </form>
 
       <p className="text-sm text-foreground/50 text-center mt-6">
-        Didn't receive the code?{" "}
-        <button className="text-violet-400 hover:text-violet-300 font-medium transition-colors">
-          Resend
+        Didn&apos;t receive the code?{" "}
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={isResending}
+          className="text-violet-400 hover:text-violet-300 font-medium transition-colors disabled:opacity-60"
+        >
+          {isResending ? "Sending..." : "Resend"}
         </button>
       </p>
     </div>
@@ -126,7 +135,13 @@ function VerifyOtpContent() {
 
 export default function VerifyOtpPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-violet-500" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex justify-center p-8">
+          <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+        </div>
+      }
+    >
       <VerifyOtpContent />
     </Suspense>
   );

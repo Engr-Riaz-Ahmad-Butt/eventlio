@@ -9,6 +9,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ── Enums ────────────────────────────────────────────────────────
@@ -97,6 +98,9 @@ model User {
   otp             String?
   otpExpiresAt    DateTime?
   refreshToken    String?
+  onboardingStep  String?
+  onboardingCompletedAt DateTime?
+  lastLoginAt     DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -134,7 +138,9 @@ model VendorProfile {
 
   isVerified     Boolean      @default(false)
   isFeatured     Boolean      @default(false)
+  isPublic       Boolean      @default(true)
   status         VendorStatus @default(PENDING)
+  profileCompletion Int       @default(0)
 
   avgRating      Float        @default(0)
   totalReviews   Int          @default(0)
@@ -157,6 +163,7 @@ model VendorProfile {
   @@index([status])
   @@index([isFeatured])
   @@index([avgRating])
+  @@index([isPublic])
   @@map("vendor_profiles")
 }
 

@@ -13,6 +13,7 @@ import {
   RegisterDto,
   LoginDto,
   VerifyOtpDto,
+  ResendOtpDto,
   ForgotPasswordDto,
   ResetPasswordDto,
   RefreshTokenDto,
@@ -64,6 +65,7 @@ export class AuthService {
         role,
         otp,
         otpExpiresAt,
+        onboardingStep: role === Role.VENDOR_OWNER ? 'vendor-onboarding' : 'client-onboarding',
       },
     });
 
@@ -118,12 +120,43 @@ export class AuthService {
     });
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);
+    const verifiedUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      include: { vendorProfile: true, clientProfile: true },
+    });
 
     return {
       message: 'Email verified successfully',
       ...tokens,
-      user: this.sanitizeUser(user),
+      user: this.sanitizeUser(verifiedUser),
     };
+  }
+
+  async resendOtp(dto: ResendOtpDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      return { message: 'If this email exists, a new OTP has been sent.' };
+    }
+
+    if (user.isEmailVerified) {
+      return { message: 'This email is already verified.' };
+    }
+
+    const otp = this.generateOtp();
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        otp,
+        otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+    });
+
+    this.logger.log(`Resent OTP for ${dto.email}: ${otp}`);
+
+    return { message: 'If this email exists, a new OTP has been sent.' };
   }
 
   // ── Login ─────────────────────────────────────────────────────
@@ -158,11 +191,19 @@ export class AuthService {
     }
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+    const freshUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      include: { vendorProfile: true, clientProfile: true },
+    });
 
     return {
       message: 'Login successful',
       ...tokens,
-      user: this.sanitizeUser(user),
+      user: this.sanitizeUser(freshUser),
     };
   }
 
@@ -241,11 +282,24 @@ export class AuthService {
       }
 
       const tokens = await this.generateTokens(user.id, user.email, user.role);
+      const freshUser = await this.prisma.user.findUnique({
+        where: { id: user.id },
+        include: { vendorProfile: true, clientProfile: true },
+      });
 
-      return { ...tokens, user: this.sanitizeUser(user) };
+      return { ...tokens, user: this.sanitizeUser(freshUser) };
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+  }
+
+  async logout(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null },
+    });
+
+    return { message: 'Logged out successfully' };
   }
 
   // ── Get Current User ──────────────────────────────────────────
@@ -296,6 +350,7 @@ export class AuthService {
   }
 
   private sanitizeUser(user: any) {
+    if (!user) return null;
     const { passwordHash, otp, otpExpiresAt, refreshToken, ...sanitized } = user;
     return sanitized;
   }

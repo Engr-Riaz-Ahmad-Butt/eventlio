@@ -71,9 +71,44 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
-    const updated = await this.prisma.user.update({
-      where: { id },
-      data: dto,
+    const { city, address, completeOnboarding, ...userData } = dto;
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const savedUser = await tx.user.update({
+        where: { id },
+        data: {
+          ...userData,
+          onboardingStep: completeOnboarding ? 'completed' : user.onboardingStep,
+          onboardingCompletedAt: completeOnboarding
+            ? new Date()
+            : user.onboardingCompletedAt,
+        },
+      });
+
+      if (user.role === 'CLIENT' && (city !== undefined || address !== undefined || dto.phone !== undefined)) {
+        await tx.clientProfile.upsert({
+          where: { userId: id },
+          create: {
+            userId: id,
+            city,
+            address,
+            phone: dto.phone,
+          },
+          update: {
+            city,
+            address,
+            phone: dto.phone,
+          },
+        });
+      }
+
+      return tx.user.findUnique({
+        where: { id },
+        include: {
+          vendorProfile: true,
+          clientProfile: true,
+        },
+      });
     });
 
     const { passwordHash, otp, otpExpiresAt, refreshToken, ...sanitized } = updated;

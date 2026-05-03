@@ -1,11 +1,35 @@
-import { IsString, IsOptional, IsUrl, IsBoolean } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsOptional,
+  IsString,
+  IsUrl,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
+class ServiceAreaInputDto {
+  @ApiPropertyOptional()
+  @IsString()
+  city: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  area?: string;
+}
 
 export class UpdateVendorProfileDto {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   businessName?: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  slug?: string;
 
   @ApiPropertyOptional()
   @IsString()
@@ -61,4 +85,22 @@ export class UpdateVendorProfileDto {
   @IsString()
   @IsOptional()
   logo?: string;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  categoryIds?: string[];
+
+  @ApiPropertyOptional({ type: [ServiceAreaInputDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ServiceAreaInputDto)
+  @IsOptional()
+  serviceAreas?: ServiceAreaInputDto[];
+
+  @ApiPropertyOptional()
+  @IsBoolean()
+  @IsOptional()
+  isPublic?: boolean;
 }

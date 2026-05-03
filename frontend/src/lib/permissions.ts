@@ -1,4 +1,5 @@
 import { Role } from '@/types';
+import type { User } from '@/types';
 
 type Permission =
   | 'view_vendor_dashboard'
@@ -71,4 +72,12 @@ export function getDashboardPath(role: Role): string {
     default:
       return '/';
   }
+}
+
+export function getPostAuthPath(user: User): string {
+  if (!user.onboardingCompletedAt) {
+    return user.role === 'CLIENT' ? '/onboarding/client' : '/onboarding/vendor';
+  }
+
+  return getDashboardPath(user.role);
 }

@@ -1,6 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_URL } from './constants';
-import { getAccessToken, getRefreshToken, setTokens, clearTokens, isTokenExpired } from './auth';
+import { getAccessToken, getRefreshToken, setTokens, clearTokens } from './auth';
 
 const api = axios.create({
   baseURL: API_URL,

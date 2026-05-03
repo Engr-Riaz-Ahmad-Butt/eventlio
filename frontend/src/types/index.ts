@@ -11,6 +11,9 @@ export interface User {
   avatar?: string;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
+  onboardingStep?: string | null;
+  onboardingCompletedAt?: string | null;
+  lastLoginAt?: string | null;
   createdAt: string;
   updatedAt: string;
   vendorProfile?: VendorProfile;
@@ -36,7 +39,9 @@ export interface VendorProfile {
   logo?: string;
   isVerified: boolean;
   isFeatured: boolean;
+  isPublic?: boolean;
   status: 'PENDING' | 'APPROVED' | 'SUSPENDED' | 'REJECTED';
+  profileCompletion?: number;
   avgRating: number;
   totalReviews: number;
   createdAt: string;
