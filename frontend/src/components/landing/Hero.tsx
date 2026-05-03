@@ -6,12 +6,18 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { gsap, countUp } from "@/lib/gsap";
 import { createPhoneScene } from "@/lib/three-hero";
+import { useLocale } from "@/providers/locale-provider";
+import { pickLocale } from "@/lib/locale";
 
-const heroLines = ["Manage Every", "Booking.", "Grow Every", "Event."];
 const stats = [
-  { label: "Vendors", value: 500, suffix: "+" },
-  { label: "Bookings", value: 2000, suffix: "+" },
-  { label: "Revenue Tracked", value: 5, prefix: "PKR ", suffix: "Cr+" },
+  { label: { en: "Vendors", "roman-ur": "Vendors", ur: "وینڈرز" }, value: 500, suffix: "+" },
+  { label: { en: "Bookings", "roman-ur": "Bookings", ur: "بکنگز" }, value: 2000, suffix: "+" },
+  {
+    label: { en: "Revenue Tracked", "roman-ur": "Revenue Tracked", ur: "ٹریک شدہ ریونیو" },
+    value: 5,
+    prefix: "PKR ",
+    suffix: "Cr+",
+  },
 ];
 
 export function Hero() {
@@ -19,6 +25,7 @@ export function Hero() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const statsRef = useRef<Array<HTMLSpanElement | null>>([]);
   const [canvasReady, setCanvasReady] = useState(true);
+  const { locale } = useLocale();
 
   useEffect(() => {
     if (!rootRef.current) return;
@@ -27,26 +34,38 @@ export function Hero() {
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
       tl.from("[data-hero-badge]", { y: 30, opacity: 0, duration: 0.6 })
-        .from("[data-hero-word]", {
-          y: 80,
-          opacity: 0,
-          stagger: 0.07,
-          duration: 0.7,
-        }, "-=0.2")
+        .from(
+          "[data-hero-word]",
+          {
+            y: 80,
+            opacity: 0,
+            stagger: 0.07,
+            duration: 0.7,
+          },
+          "-=0.2",
+        )
         .from("[data-hero-copy]", { y: 20, opacity: 0, duration: 0.5 }, "-=0.3")
-        .from("[data-hero-cta]", {
-          y: 20,
-          opacity: 0,
-          stagger: 0.1,
-          duration: 0.5,
-        }, "-=0.2")
+        .from(
+          "[data-hero-cta]",
+          {
+            y: 20,
+            opacity: 0,
+            stagger: 0.1,
+            duration: 0.5,
+          },
+          "-=0.2",
+        )
         .from("[data-hero-proof]", { y: 15, opacity: 0, duration: 0.4 }, "-=0.1")
-        .from("[data-hero-visual]", {
-          x: 60,
-          opacity: 0,
-          duration: 0.8,
-          ease: "power2.out",
-        }, "-=0.8");
+        .from(
+          "[data-hero-visual]",
+          {
+            x: 60,
+            opacity: 0,
+            duration: 0.8,
+            ease: "power2.out",
+          },
+          "-=0.8",
+        );
     }, rootRef);
 
     return () => context.revert();
@@ -66,9 +85,53 @@ export function Hero() {
   useEffect(() => {
     statsRef.current.forEach((element, index) => {
       if (!element) return;
-      countUp(element, stats[index].value, stats[index].prefix ?? "", stats[index].suffix ?? "");
+      countUp(
+        element,
+        stats[index].value,
+        stats[index].prefix ?? "",
+        stats[index].suffix ?? "",
+      );
     });
   }, []);
+
+  const copy = pickLocale(locale, {
+    en: {
+      lines: ["Manage Every", "Booking.", "Grow Every", "Event."],
+      badge: "Pakistan's #1 Event Platform",
+      subOne:
+        "Photographers, Makeup Artists, Salons, Decorators, Caterers, DJs.",
+      subTwo:
+        "Everything in one platform, from bookings to payment tracking.",
+      primaryCta: "Register as Vendor",
+      secondaryCta: "Browse Vendors",
+      joined: "200+ Vendors Already Joined",
+      trusted: "Trusted in Rawalpindi, Lahore, Karachi",
+    },
+    "roman-ur": {
+      lines: ["Manage Every", "Booking.", "Grow Every", "Event."],
+      badge: "Pakistan Ka #1 Event Platform",
+      subOne:
+        "Photographers, Makeup Artists, Salons, Decorators, Caterers, DJs.",
+      subTwo:
+        "Ek platform mein saari zaroorat, bookings se payment tracking tak.",
+      primaryCta: "Vendor Register Karein",
+      secondaryCta: "Vendors Browse Karein",
+      joined: "200+ Vendors Already Joined",
+      trusted: "Trusted in Rawalpindi, Lahore, Karachi",
+    },
+    ur: {
+      lines: ["ہر", "بکنگ", "اور ہر", "ایونٹ کو بڑھائیں۔"],
+      badge: "پاکستان کا نمبر 1 ایونٹ پلیٹ فارم",
+      subOne:
+        "فوٹوگرافرز، میک اپ آرٹسٹس، سیلونز، ڈیکوریٹرز، کیٹررز، ڈی جیز۔",
+      subTwo:
+        "بکنگ سے لے کر پیمنٹ ٹریکنگ تک، سب کچھ ایک ہی پلیٹ فارم میں۔",
+      primaryCta: "وینڈر کے طور پر رجسٹر کریں",
+      secondaryCta: "وینڈرز براؤز کریں",
+      joined: "200+ وینڈرز پہلے ہی شامل ہو چکے ہیں",
+      trusted: "راولپنڈی، لاہور اور کراچی میں قابلِ اعتماد",
+    },
+  });
 
   return (
     <section
@@ -83,17 +146,15 @@ export function Hero() {
               data-hero-badge
               className="eyebrow border-[color:rgba(201,168,76,0.4)] text-[var(--gold)]"
             >
-              Pakistan Ka #1 Event Platform
+              {copy.badge}
             </div>
 
             <div className="mt-7 space-y-1">
-              {heroLines.map((line) => (
+              {copy.lines.map((line) => (
                 <div
                   key={line}
                   data-hero-word
-                  className={`display-hero ${
-                    line.endsWith(".") ? "text-[var(--gold)]" : "text-white"
-                  }`}
+                  className={`display-hero ${line.includes(".") || line === "بکنگ" || line === "ایونٹ کو بڑھائیں۔" ? "text-[var(--gold)]" : "text-white"}`}
                 >
                   {line}
                 </div>
@@ -101,21 +162,19 @@ export function Hero() {
             </div>
 
             <div data-hero-copy className="mt-7 max-w-2xl space-y-3 text-lg leading-8 text-white/72">
-              <p>
-                Photographers, Makeup Artists, Salons, Decorators, Caterers, DJs.
-              </p>
-              <p>Ek platform mein saari zaroorat, bookings se payment tracking tak.</p>
+              <p>{copy.subOne}</p>
+              <p>{copy.subTwo}</p>
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Button data-hero-cta variant="gold" size="xl" asChild>
                 <Link href="/register">
-                  Vendor Register Karein
+                  {copy.primaryCta}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button data-hero-cta variant="ghost-light" size="xl" asChild>
-                <Link href="/vendors">Vendors Browse Karein</Link>
+                <Link href="/vendors">{copy.secondaryCta}</Link>
               </Button>
             </div>
 
@@ -132,13 +191,11 @@ export function Hero() {
                     />
                   ))}
                 </div>
-                <span>200+ Vendors Already Joined</span>
+                <span>{copy.joined}</span>
               </div>
               <div className="font-mono-ui tracking-wide text-[var(--gold)]">
                 ★★★★★
-                <span className="ml-3 font-body text-white/72">
-                  Trusted in Rawalpindi, Lahore, Karachi
-                </span>
+                <span className="ml-3 font-body text-white/72">{copy.trusted}</span>
               </div>
             </div>
           </div>
@@ -169,7 +226,10 @@ export function Hero() {
       <div className="relative z-10 border-t border-[color:rgba(201,168,76,0.16)] bg-[var(--primary-dark)]/95">
         <div className="section-shell grid gap-6 py-6 md:grid-cols-3">
           {stats.map((stat, index) => (
-            <div key={stat.label} className="border-l border-[color:rgba(201,168,76,0.16)] pl-5 first:border-l-0 first:pl-0">
+            <div
+              key={index}
+              className="border-l border-[color:rgba(201,168,76,0.16)] pl-5 first:border-l-0 first:pl-0"
+            >
               <span
                 ref={(element) => {
                   statsRef.current[index] = element;
@@ -179,7 +239,7 @@ export function Hero() {
                 0
               </span>
               <p className="mt-1 text-sm uppercase tracking-[0.24em] text-white/58">
-                {stat.label}
+                {pickLocale(locale, stat.label)}
               </p>
             </div>
           ))}

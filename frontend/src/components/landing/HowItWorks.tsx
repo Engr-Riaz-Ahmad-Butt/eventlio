@@ -3,26 +3,76 @@
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { gsap } from "@/lib/gsap";
+import { useLocale } from "@/providers/locale-provider";
+import { pickLocale } from "@/lib/locale";
 
-const vendorSteps = [
-  ["Register & Profile Banao", "2 minute mein apna business setup. Photos, packages, prices add karo."],
-  ["Booking Request Aye", "Client request karta hai. Aap ko WhatsApp pe seedha notification aata hai."],
-  ["Accept Karo", "Ek click mein confirm. Client ko automatic confirmation message jata hai."],
-  ["Client Se Deal Karo", "Aap ka number share tab hota hai jab deal genuine ho. Details finalize karo."],
-  ["Dashboard Mein Track Karo", "Payment track karo, upcoming events dekho, sab organized."],
-];
-
-const clientSteps = [
-  ["City aur Category Choose Karo", "Apne shahar aur service type ke hisaab se shortlist banao."],
-  ["Vendor Profiles Compare Karo", "Reviews, pricing, gallery aur response time ek nazar mein dekho."],
-  ["Booking Request Bhejo", "Seedha request bhejo without endless back and forth."],
-  ["Advance Payment Karo", "Secure payment tracking ke saath booking confidence milta hai."],
-  ["Event Ka Maza Lo!", "Better coordination, better communication, better event outcome."],
-];
+const stepsByLocale = {
+  en: {
+    title: "Simple. Fast. WhatsApp.",
+    label: "How It Works",
+    vendorTab: "For Vendors",
+    clientTab: "For Clients",
+    vendor: [
+      ["Register and Build a Profile", "Set up your business in minutes. Add photos, packages, and prices."],
+      ["Receive a Booking Request", "The client sends a request and you get a direct WhatsApp alert."],
+      ["Accept the Request", "Confirm with one click and send an automatic confirmation."],
+      ["Finalize with the Client", "Share details after intent is clear and close the deal with confidence."],
+      ["Track Everything in Dashboard", "Payments, bookings, and upcoming events stay organized."],
+    ],
+    client: [
+      ["Choose a City and Category", "Start with the right location and service type."],
+      ["Compare Vendor Profiles", "Review ratings, pricing, gallery, and response times."],
+      ["Send a Booking Request", "Reach out without endless back and forth."],
+      ["Pay the Advance", "Use tracked advances for more confidence."],
+      ["Enjoy the Event", "Better coordination leads to a smoother event day."],
+    ],
+  },
+  "roman-ur": {
+    title: "Simple. Fast. WhatsApp.",
+    label: "How It Works",
+    vendorTab: "Vendor Ke Liye",
+    clientTab: "Client Ke Liye",
+    vendor: [
+      ["Register & Profile Banao", "2 minute mein apna business setup. Photos, packages, prices add karo."],
+      ["Booking Request Aye", "Client request karta hai. Aap ko WhatsApp pe seedha notification aata hai."],
+      ["Accept Karo", "Ek click mein confirm. Client ko automatic confirmation message jata hai."],
+      ["Client Se Deal Karo", "Aap ka number share tab hota hai jab deal genuine ho. Details finalize karo."],
+      ["Dashboard Mein Track Karo", "Payment track karo, upcoming events dekho, sab organized."],
+    ],
+    client: [
+      ["City aur Category Choose Karo", "Apne shahar aur service type ke hisaab se shortlist banao."],
+      ["Vendor Profiles Compare Karo", "Reviews, pricing, gallery aur response time ek nazar mein dekho."],
+      ["Booking Request Bhejo", "Seedha request bhejo without endless back and forth."],
+      ["Advance Payment Karo", "Secure payment tracking ke saath booking confidence milta hai."],
+      ["Event Ka Maza Lo!", "Better coordination, better communication, better event outcome."],
+    ],
+  },
+  ur: {
+    title: "سادہ۔ تیز۔ واٹس ایپ۔",
+    label: "یہ کیسے کام کرتا ہے",
+    vendorTab: "وینڈرز کے لیے",
+    clientTab: "کلائنٹس کے لیے",
+    vendor: [
+      ["رجسٹر کریں اور پروفائل بنائیں", "چند منٹ میں اپنا بزنس سیٹ اپ کریں۔ تصاویر، پیکجز اور قیمتیں شامل کریں۔"],
+      ["بکنگ ریکویسٹ وصول کریں", "کلائنٹ ریکویسٹ بھیجتا ہے اور آپ کو فوراً واٹس ایپ الرٹ ملتا ہے۔"],
+      ["منظور کریں", "ایک کلک میں کنفرم کریں اور خودکار تصدیق بھیجیں۔"],
+      ["کلائنٹ سے تفصیل طے کریں", "جب نیت واضح ہو تو تفصیل شیئر کریں اور اعتماد کے ساتھ ڈیل مکمل کریں۔"],
+      ["ڈیش بورڈ میں سب کچھ ٹریک کریں", "پیمنٹ، بکنگز اور آنے والے ایونٹس سب منظم رہتے ہیں۔"],
+    ],
+    client: [
+      ["شہر اور کیٹیگری منتخب کریں", "صحیح مقام اور سروس ٹائپ سے تلاش شروع کریں۔"],
+      ["وینڈر پروفائلز کا موازنہ کریں", "ریٹنگ، قیمت، گیلری اور ریسپانس ٹائم دیکھیں۔"],
+      ["بکنگ ریکویسٹ بھیجیں", "غیر ضروری بار بار بات چیت کے بغیر رابطہ کریں۔"],
+      ["ایڈوانس پیمنٹ کریں", "ٹریک شدہ ایڈوانس کے ساتھ زیادہ اعتماد حاصل کریں۔"],
+      ["ایونٹ انجوائے کریں", "بہتر کوآرڈینیشن بہتر ایونٹ ڈے بناتی ہے۔"],
+    ],
+  },
+} as const;
 
 export function HowItWorks() {
   const [active, setActive] = useState<"vendor" | "client">("vendor");
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const { locale } = useLocale();
 
   useEffect(() => {
     if (!rootRef.current) return;
@@ -45,21 +95,22 @@ export function HowItWorks() {
     return () => context.revert();
   }, [active]);
 
-  const steps = active === "vendor" ? vendorSteps : clientSteps;
+  const copy = pickLocale(locale, stepsByLocale);
+  const steps = active === "vendor" ? copy.vendor : copy.client;
 
   return (
     <section id="how-it-works" className="section-pad bg-[color:rgba(232,245,233,0.28)]">
       <div className="section-shell">
         <div className="mx-auto max-w-3xl text-center">
-          <Badge>How It Works</Badge>
-          <h2 className="display-h1 mt-6 text-[var(--dark)]">Simple. Fast. WhatsApp.</h2>
+          <Badge>{copy.label}</Badge>
+          <h2 className="display-h1 mt-6 text-[var(--dark)]">{copy.title}</h2>
         </div>
 
         <div className="mt-10 flex justify-center">
           <div className="inline-flex rounded-full border border-[color:rgba(27,77,62,0.1)] bg-white p-1 shadow-[var(--shadow-sm)]">
             {[
-              ["vendor", "Vendor Ke Liye"],
-              ["client", "Client Ke Liye"],
+              ["vendor", copy.vendorTab],
+              ["client", copy.clientTab],
             ].map(([value, label]) => (
               <button
                 key={value}

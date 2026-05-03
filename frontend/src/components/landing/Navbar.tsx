@@ -5,14 +5,45 @@ import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { gsap } from "@/lib/gsap";
+import { pickLocale } from "@/lib/locale";
+import { useLocale } from "@/providers/locale-provider";
 
 const links = [
-  { href: "#features", label: "Features" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#how-it-works", label: "How It Works" },
-  { href: "#vendors", label: "For Vendors" },
-  { href: "#blog", label: "Blog" },
+  {
+    href: "#features",
+    label: { en: "Features", "roman-ur": "Features", ur: "فیچرز" },
+  },
+  {
+    href: "#pricing",
+    label: { en: "Pricing", "roman-ur": "Pricing", ur: "قیمت" },
+  },
+  {
+    href: "#how-it-works",
+    label: {
+      en: "How It Works",
+      "roman-ur": "Kaise Kaam Karta Hai",
+      ur: "یہ کیسے کام کرتا ہے",
+    },
+  },
+  {
+    href: "#vendors",
+    label: {
+      en: "For Vendors",
+      "roman-ur": "Vendors Ke Liye",
+      ur: "وینڈرز کے لیے",
+    },
+  },
+  {
+    href: "#blog",
+    label: { en: "Blog", "roman-ur": "Blog", ur: "بلاگ" },
+  },
 ];
+
+const localeLabels = {
+  en: "EN",
+  "roman-ur": "Roman",
+  ur: "اردو",
+} as const;
 
 function StarMark() {
   return (
@@ -31,6 +62,7 @@ export function Navbar() {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { locale, setLocale } = useLocale();
 
   useEffect(() => {
     if (navRef.current) {
@@ -58,6 +90,21 @@ export function Navbar() {
     });
   }, [open]);
 
+  const labels = pickLocale(locale, {
+    en: {
+      login: "Login",
+      trial: "Start Free Trial",
+    },
+    "roman-ur": {
+      login: "Login",
+      trial: "Free Trial Shuru Karein",
+    },
+    ur: {
+      login: "لاگ اِن",
+      trial: "فری ٹرائل شروع کریں",
+    },
+  });
+
   return (
     <>
       <header
@@ -83,21 +130,32 @@ export function Navbar() {
                 href={link.href}
                 className="group relative text-[15px] text-white/80 hover:text-[var(--gold)]"
               >
-                {link.label}
+                {pickLocale(locale, link.label)}
                 <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--gold)] transition-all duration-300 group-hover:w-full" />
               </Link>
             ))}
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
-            <button className="rounded-full border border-[color:rgba(201,168,76,0.45)] px-4 py-2 text-sm font-medium text-[var(--gold)]">
-              EN | اردو
-            </button>
+            <div className="flex rounded-full border border-[color:rgba(201,168,76,0.45)] p-1 text-sm font-medium text-[var(--gold)]">
+              {(["en", "roman-ur", "ur"] as const).map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setLocale(item)}
+                  className={`rounded-full px-3 py-1.5 transition ${
+                    locale === item ? "bg-[var(--gold)] text-[var(--dark)]" : ""
+                  }`}
+                >
+                  {localeLabels[item]}
+                </button>
+              ))}
+            </div>
             <Button variant="ghost-light" asChild>
-              <Link href="/login">Login</Link>
+              <Link href="/login">{labels.login}</Link>
             </Button>
             <Button variant="gold" asChild>
-              <Link href="/register">Start Free Trial</Link>
+              <Link href="/register">{labels.trial}</Link>
             </Button>
           </div>
 
@@ -139,17 +197,32 @@ export function Navbar() {
               onClick={() => setOpen(false)}
               className="text-2xl font-medium text-[var(--gold)]"
             >
-              {link.label}
+              {pickLocale(locale, link.label)}
             </Link>
+          ))}
+        </div>
+
+        <div className="mt-10 flex gap-2">
+          {(["en", "roman-ur", "ur"] as const).map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setLocale(item)}
+              className={`rounded-full border border-[color:rgba(201,168,76,0.35)] px-4 py-2 text-sm text-[var(--gold)] ${
+                locale === item ? "bg-[var(--gold)] text-[var(--dark)]" : ""
+              }`}
+            >
+              {localeLabels[item]}
+            </button>
           ))}
         </div>
 
         <div className="mt-12 flex flex-col gap-3">
           <Button variant="ghost-light" size="lg" asChild>
-            <Link href="/login">Login</Link>
+            <Link href="/login">{labels.login}</Link>
           </Button>
           <Button variant="gold" size="lg" asChild>
-            <Link href="/register">Start Free Trial</Link>
+            <Link href="/register">{labels.trial}</Link>
           </Button>
         </div>
       </div>

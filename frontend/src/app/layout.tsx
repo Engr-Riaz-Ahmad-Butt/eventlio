@@ -6,6 +6,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
+import { LocaleProvider } from "@/providers/locale-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 const playfair = Playfair_Display({
@@ -56,10 +57,12 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${jakarta.variable} ${mono.variable} font-body text-[15px] text-[var(--dark)]`}
       >
-        <QueryProvider>
-          {children}
-          <Toaster richColors position="top-right" />
-        </QueryProvider>
+        <LocaleProvider>
+          <QueryProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </QueryProvider>
+        </LocaleProvider>
       </body>
     </html>
   );
