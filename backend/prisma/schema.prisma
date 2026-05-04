@@ -293,6 +293,7 @@ model Booking {
   packageId       String?
   package         VendorPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
 
+  eventType       String?
   eventDate       DateTime
   eventTime       String?
   eventCity       String

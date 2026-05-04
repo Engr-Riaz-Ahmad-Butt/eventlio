@@ -15,6 +15,7 @@ import { VendorGalleryModule } from './modules/vendor-gallery/vendor-gallery.mod
 import { ServiceAreasModule } from './modules/service-areas/service-areas.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
+import { BookingsModule } from './modules/bookings/bookings.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { MarketplaceModule } from './modules/marketplace/marketplace.module';
     ServiceAreasModule,
     UploadsModule,
     MarketplaceModule,
+    BookingsModule,
   ],
   providers: [
     // Global JWT Auth Guard — all routes protected by default

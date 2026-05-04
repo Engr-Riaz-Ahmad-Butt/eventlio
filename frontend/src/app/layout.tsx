@@ -1,31 +1,20 @@
 import type { Metadata } from "next";
-import {
-  JetBrains_Mono,
-  Playfair_Display,
-  Plus_Jakarta_Sans,
-} from "next/font/google";
+import "@fontsource/playfair-display/400.css";
+import "@fontsource/playfair-display/500.css";
+import "@fontsource/playfair-display/600.css";
+import "@fontsource/playfair-display/700.css";
+import "@fontsource/plus-jakarta-sans/300.css";
+import "@fontsource/plus-jakarta-sans/400.css";
+import "@fontsource/plus-jakarta-sans/500.css";
+import "@fontsource/plus-jakarta-sans/600.css";
+import "@fontsource/plus-jakarta-sans/700.css";
+import "@fontsource/plus-jakarta-sans/800.css";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/500.css";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { LocaleProvider } from "@/providers/locale-provider";
 import { Toaster } from "@/components/ui/sonner";
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-  weight: ["400", "500", "600", "700"],
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-jakarta",
-  weight: ["300", "400", "500", "600", "700", "800"],
-});
-
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  weight: ["400", "500"],
-});
 
 export const metadata: Metadata = {
   title: "Eventlio | The Business OS for Event Vendors",
@@ -54,9 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${playfair.variable} ${jakarta.variable} ${mono.variable} font-body text-[15px] text-[var(--dark)]`}
-      >
+      <body className="font-body text-[15px] text-[var(--dark)]">
         <LocaleProvider>
           <QueryProvider>
             {children}

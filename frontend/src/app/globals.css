@@ -5,6 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --font-playfair: "Playfair Display";
+  --font-jakarta: "Plus Jakarta Sans";
+  --font-mono: "JetBrains Mono";
+
   --primary: #1b4d3e;
   --primary-dark: #0d2b22;
   --primary-light: #2d6e5a;

@@ -269,7 +269,7 @@ export class AuthService {
   async refreshToken(dto: RefreshTokenDto) {
     try {
       const payload = this.jwtService.verify(dto.refreshToken, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        secret: this.configService.get('JWT_REFRESH_SECRET', 'eventlio-dev-refresh-secret'),
       });
 
       const user = await this.prisma.user.findUnique({
@@ -327,11 +327,11 @@ export class AuthService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get('JWT_SECRET'),
+        secret: this.configService.get('JWT_SECRET', 'eventlio-dev-jwt-secret'),
         expiresIn: this.configService.get('JWT_EXPIRES_IN', '15m'),
       }),
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        secret: this.configService.get('JWT_REFRESH_SECRET', 'eventlio-dev-refresh-secret'),
         expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN', '7d'),
       }),
     ]);

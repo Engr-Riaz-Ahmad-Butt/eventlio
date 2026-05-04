@@ -8,6 +8,7 @@ type StatCardProps = {
   delta: string;
   icon: React.ComponentType<{ className?: string }>;
   accent?: "gold" | "green" | "emerald" | "amber";
+  deltaTone?: "positive" | "warning" | "neutral";
 };
 
 const accentClasses = {
@@ -17,12 +18,19 @@ const accentClasses = {
   amber: "bg-[color:rgba(217,119,6,0.12)] text-[var(--warning)]",
 };
 
+const deltaClasses = {
+  positive: "bg-[color:rgba(5,150,105,0.08)] text-[var(--success)]",
+  warning: "bg-[color:rgba(217,119,6,0.12)] text-[var(--warning)]",
+  neutral: "bg-[color:rgba(27,77,62,0.08)] text-[var(--primary-dark)]",
+};
+
 export function StatCard({
   label,
   value,
   delta,
   icon: Icon,
   accent = "green",
+  deltaTone = "positive",
 }: StatCardProps) {
   return (
     <Card className="rounded-[24px] p-5">
@@ -34,7 +42,7 @@ export function StatCard({
           <p className="font-mono-ui text-[30px] font-medium text-[var(--dark)]">
             {value}
           </p>
-          <div className="inline-flex items-center gap-1 rounded-full bg-[color:rgba(5,150,105,0.08)] px-2.5 py-1 text-xs font-medium text-[var(--success)]">
+          <div className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium", deltaClasses[deltaTone])}>
             <ArrowUpRight className="h-3.5 w-3.5" />
             {delta}
           </div>

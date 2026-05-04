@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/marketplace/SearchBar";
 import { CategoryChips } from "@/components/marketplace/CategoryChips";
@@ -29,7 +31,7 @@ const DEFAULT_QUERY: MarketplaceVendorQuery = {
   sort: "rating",
 };
 
-export default function VendorsPage() {
+function VendorsPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -262,5 +264,23 @@ export default function VendorsPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function VendorsPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="market-shell min-h-screen px-6 py-10">
+          <div className="mx-auto max-w-7xl">
+            <div className="surface-card rounded-[28px] px-6 py-16 text-center text-[var(--gray-text)]">
+              Loading vendors...
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <VendorsPageContent />
+    </Suspense>
   );
 }

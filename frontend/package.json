@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/playfair-display": "^5.2.8",
+    "@fontsource/plus-jakarta-sans": "^5.2.8",
     "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-slot": "^1.2.4",

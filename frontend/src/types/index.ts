@@ -120,6 +120,7 @@ export interface Booking {
   clientId: string;
   vendorId: string;
   packageId?: string;
+  eventType?: string;
   eventDate: string;
   eventTime?: string;
   eventCity: string;
@@ -130,11 +131,27 @@ export interface Booking {
   totalAmount: number;
   advanceAmount: number;
   balanceAmount: number;
+  rejectionReason?: string | null;
+  cancelledBy?: string | null;
+  cancelReason?: string | null;
   createdAt: string;
   updatedAt: string;
-  vendor?: VendorProfile;
-  client?: ClientProfile;
-  package?: VendorPackage;
+  vendor?: Pick<VendorProfile, "id" | "slug" | "businessName" | "city" | "coverImage"> & {
+    category?: { name: string; slug: string } | null;
+  };
+  client?: { id: string; name: string; email: string };
+  package?: VendorPackage | null;
+  statusHistory?: BookingStatusHistory[];
+}
+
+export interface BookingStatusHistory {
+  id: string;
+  bookingId: string;
+  fromStatus?: BookingStatus | null;
+  toStatus: BookingStatus;
+  changedBy: string;
+  note?: string | null;
+  createdAt: string;
 }
 
 // ── Payment ──────────────────────────────────────────────────────
