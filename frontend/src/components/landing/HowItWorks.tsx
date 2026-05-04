@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { gsap } from "@/lib/gsap";
 import { useLocale } from "@/providers/locale-provider";
 import { pickLocale } from "@/lib/locale";
 
@@ -71,43 +70,21 @@ const stepsByLocale = {
 
 export function HowItWorks() {
   const [active, setActive] = useState<"vendor" | "client">("vendor");
-  const rootRef = useRef<HTMLDivElement | null>(null);
   const { locale } = useLocale();
-
-  useEffect(() => {
-    if (!rootRef.current) return;
-
-    const context = gsap.context(() => {
-      gsap.from("[data-step-item]", {
-        x: -30,
-        opacity: 0,
-        stagger: 0.12,
-        duration: 0.7,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: rootRef.current,
-          start: "top 78%",
-          once: true,
-        },
-      });
-    }, rootRef);
-
-    return () => context.revert();
-  }, [active]);
 
   const copy = pickLocale(locale, stepsByLocale);
   const steps = active === "vendor" ? copy.vendor : copy.client;
 
   return (
-    <section id="how-it-works" className="section-pad bg-[color:rgba(232,245,233,0.28)]">
+    <section id="how-it-works" className="section-pad bg-[color:rgba(232,245,233,0.28)] relative">
       <div className="section-shell">
-        <div className="mx-auto max-w-3xl text-center">
-          <Badge>{copy.label}</Badge>
+        <div className="mx-auto max-w-3xl text-center animate-fade-in-up">
+          <Badge variant="gold">{copy.label}</Badge>
           <h2 className="display-h1 mt-6 text-[var(--dark)]">{copy.title}</h2>
         </div>
 
-        <div className="mt-10 flex justify-center">
-          <div className="inline-flex rounded-full border border-[color:rgba(27,77,62,0.1)] bg-white p-1 shadow-[var(--shadow-sm)]">
+        <div className="mt-10 flex justify-center animate-fade-in-up delay-100">
+          <div className="inline-flex rounded-full border border-gray-100 bg-white p-1.5 shadow-lg">
             {[
               ["vendor", copy.vendorTab],
               ["client", copy.clientTab],
@@ -116,10 +93,10 @@ export function HowItWorks() {
                 key={value}
                 type="button"
                 onClick={() => setActive(value as "vendor" | "client")}
-                className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+                className={`rounded-full px-8 py-2.5 text-sm font-black transition-all duration-300 ${
                   active === value
-                    ? "bg-[var(--gold-subtle)] text-[var(--gold-dark)]"
-                    : "text-[var(--gray-text)]"
+                    ? "bg-[var(--primary)] text-white shadow-md"
+                    : "text-[var(--gray-text)] hover:text-[var(--dark)]"
                 }`}
               >
                 {label}
@@ -129,20 +106,19 @@ export function HowItWorks() {
         </div>
 
         <div
-          ref={rootRef}
-          className="mx-auto mt-14 max-w-4xl rounded-[30px] border border-[color:rgba(27,77,62,0.08)] bg-white px-6 py-8 shadow-[var(--shadow-md)] sm:px-10"
+          className="mx-auto mt-14 max-w-4xl rounded-[40px] border border-gray-100 bg-white px-8 py-12 shadow-2xl sm:px-12 animate-fade-in-up delay-200"
         >
           <div className="relative">
-            <div className="absolute left-[18px] top-2 hidden h-[calc(100%-1rem)] w-px bg-[linear-gradient(180deg,var(--gold),rgba(201,168,76,0.1))] sm:block" />
-            <div className="space-y-8">
+            <div className="absolute left-[20px] top-4 hidden h-[calc(100%-2rem)] w-px bg-gradient-to-b from-[var(--gold)] via-[var(--gold)]/20 to-transparent sm:block" />
+            <div className="space-y-10">
               {steps.map(([title, body], index) => (
-                <div key={title} data-step-item className="relative flex gap-4 sm:gap-6">
-                  <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--gold)] font-mono-ui text-sm font-medium text-[var(--dark)]">
+                <div key={title} className="relative flex gap-6 sm:gap-10 group animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
+                  <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--gold)] font-mono-ui text-base font-black text-[var(--dark)] shadow-lg shadow-gold/20 group-hover:scale-125 transition-transform">
                     {index + 1}
                   </div>
-                  <div className="pt-1">
-                    <h3 className="text-xl font-semibold text-[var(--dark)]">{title}</h3>
-                    <p className="mt-2 leading-8 text-[var(--gray-text)]">{body}</p>
+                  <div className="pt-0.5">
+                    <h3 className="text-2xl font-bold text-[var(--dark)] group-hover:text-[var(--primary)] transition-colors">{title}</h3>
+                    <p className="mt-3 leading-relaxed text-lg text-[var(--gray-text)]">{body}</p>
                   </div>
                 </div>
               ))}
