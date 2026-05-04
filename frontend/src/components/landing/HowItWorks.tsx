@@ -5,7 +5,17 @@ import { Badge } from "@/components/ui/badge";
 import { useLocale } from "@/providers/locale-provider";
 import { pickLocale } from "@/lib/locale";
 
-const stepsByLocale = {
+const stepsByLocale: Record<
+  "en" | "roman-ur" | "ur",
+  {
+    title: string;
+    label: string;
+    vendorTab: string;
+    clientTab: string;
+    vendor: [string, string][];
+    client: [string, string][];
+  }
+> = {
   en: {
     title: "Simple. Fast. WhatsApp.",
     label: "How It Works",
@@ -66,7 +76,7 @@ const stepsByLocale = {
       ["ایونٹ انجوائے کریں", "بہتر کوآرڈینیشن بہتر ایونٹ ڈے بناتی ہے۔"],
     ],
   },
-} as const;
+};
 
 export function HowItWorks() {
   const [active, setActive] = useState<"vendor" | "client">("vendor");

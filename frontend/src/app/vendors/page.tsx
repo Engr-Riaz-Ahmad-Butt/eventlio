@@ -1,36 +1,113 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Star } from "lucide-react";
-import {
-  marketplaceCategories,
-  marketplaceCities,
-  mockVendors,
-  quickFilters,
-} from "@/data/mock";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/marketplace/SearchBar";
 import { CategoryChips } from "@/components/marketplace/CategoryChips";
+import { FilterSidebar } from "@/components/marketplace/FilterSidebar";
+import { VendorCardSkeleton } from "@/components/marketplace/VendorCardSkeleton";
 import { VendorGrid } from "@/components/marketplace/VendorGrid";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  getMarketplaceCategories,
+  getMarketplaceCities,
+  searchMarketplaceVendors,
+} from "@/lib/marketplace";
+import type {
+  MarketplaceCategory,
+  MarketplaceCity,
+  MarketplaceSort,
+  MarketplaceVendorQuery,
+  MarketplaceVendorResults,
+} from "@/types";
+
+const DEFAULT_QUERY: MarketplaceVendorQuery = {
+  page: 1,
+  limit: 9,
+  sort: "rating",
+};
 
 export default function VendorsPage() {
-  const [search, setSearch] = useState("");
-  const [city, setCity] = useState("All Cities");
-  const [category, setCategory] = useState("All Categories");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const filtered = useMemo(() => {
-    return mockVendors.filter((vendor) => {
-      const matchSearch =
-        search.trim().length === 0 ||
-        vendor.name.toLowerCase().includes(search.toLowerCase()) ||
-        vendor.description.toLowerCase().includes(search.toLowerCase());
-      const matchCity = city === "All Cities" || vendor.city === city;
-      const matchCategory =
-        category === "All Categories" || vendor.category === category;
+  const [categories, setCategories] = useState<MarketplaceCategory[]>([]);
+  const [cities, setCities] = useState<MarketplaceCity[]>([]);
+  const [results, setResults] = useState<MarketplaceVendorResults>({
+    data: [],
+    total: 0,
+    page: 1,
+    limit: 9,
+    totalPages: 1,
+  });
+  const [loading, setLoading] = useState(true);
+  const [draftSearch, setDraftSearch] = useState("");
+  const [draftCity, setDraftCity] = useState("All Cities");
+  const [draftCategory, setDraftCategory] = useState("All Categories");
 
-      return matchSearch && matchCity && matchCategory;
+  const query = useMemo<MarketplaceVendorQuery>(() => {
+    const page = Number(searchParams.get("page") ?? DEFAULT_QUERY.page);
+    const limit = Number(searchParams.get("limit") ?? DEFAULT_QUERY.limit);
+
+    return {
+      category: searchParams.get("category") ?? undefined,
+      city: searchParams.get("city") ?? undefined,
+      search: searchParams.get("search") ?? undefined,
+      minPrice: searchParams.get("minPrice")
+        ? Number(searchParams.get("minPrice"))
+        : undefined,
+      maxPrice: searchParams.get("maxPrice")
+        ? Number(searchParams.get("maxPrice"))
+        : undefined,
+      rating: searchParams.get("rating") ? Number(searchParams.get("rating")) : undefined,
+      sort: (searchParams.get("sort") as MarketplaceSort | null) ?? DEFAULT_QUERY.sort,
+      page: Number.isNaN(page) ? 1 : page,
+      limit: Number.isNaN(limit) ? 9 : limit,
+    };
+  }, [searchParams]);
+
+  useEffect(() => {
+    Promise.all([getMarketplaceCategories(), getMarketplaceCities()]).then(
+      ([categoryData, cityData]) => {
+        setCategories(categoryData);
+        setCities(cityData);
+      },
+    );
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    searchMarketplaceVendors(query)
+      .then(setResults)
+      .finally(() => setLoading(false));
+  }, [query]);
+
+  const activeCategoryLabel = useMemo(() => {
+    if (!query.category) return "All Categories";
+    return categories.find((item) => item.slug === query.category)?.label ?? query.category;
+  }, [categories, query.category]);
+
+  useEffect(() => {
+    setDraftSearch(query.search ?? "");
+    setDraftCity(query.city ?? "All Cities");
+    setDraftCategory(activeCategoryLabel);
+  }, [activeCategoryLabel, query.city, query.search]);
+
+  const syncQuery = (next: MarketplaceVendorQuery) => {
+    const params = new URLSearchParams();
+    Object.entries(next).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        params.set(key, String(value));
+      }
     });
-  }, [category, city, search]);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const categoryOptions = ["All Categories", ...categories.map((item) => item.label)];
+  const cityOptions = ["All Cities", ...cities.map((item) => item.city)];
 
   return (
     <main className="market-shell min-h-screen pb-20 pt-28">
@@ -38,92 +115,150 @@ export default function VendorsPage() {
         <div className="max-w-3xl">
           <Badge>Marketplace</Badge>
           <h1 className="display-h1 mt-6 text-[var(--dark)]">
-            Apne Event Ke Liye Best Vendor Dhundho
+            Browse, filter, compare, and move directly into booking.
           </h1>
           <p className="mt-4 text-lg leading-8 text-[var(--gray-text)]">
-            Search by city, compare categories, and shortlist verified Pakistani event vendors with confidence.
+            This is the full Module 03 client flow: search vendors, narrow by city or category, open a public profile, then continue into the booking request handoff.
           </p>
         </div>
 
         <div className="mt-10">
           <SearchBar
-            search={search}
-            setSearch={setSearch}
-            city={city}
-            setCity={setCity}
-            category={category}
-            setCategory={setCategory}
-            cities={marketplaceCities}
-            categories={marketplaceCategories}
+            search={draftSearch}
+            setSearch={setDraftSearch}
+            city={draftCity}
+            setCity={setDraftCity}
+            category={draftCategory}
+            setCategory={setDraftCategory}
+            cities={cityOptions}
+            categories={categoryOptions}
+            onSubmit={() => {
+              const match = categories.find((item) => item.label === draftCategory);
+              syncQuery({
+                ...query,
+                search: draftSearch || undefined,
+                city: draftCity === "All Cities" ? undefined : draftCity,
+                category:
+                  draftCategory === "All Categories"
+                    ? undefined
+                    : match?.slug ?? draftCategory,
+                page: 1,
+              });
+            }}
           />
         </div>
 
         <div className="mt-6">
           <CategoryChips
-            categories={["All Categories", ...marketplaceCategories]}
-            activeCategory={category}
-            onChange={setCategory}
+            categories={categoryOptions}
+            activeCategory={activeCategoryLabel}
+            onChange={(value) => {
+              const match = categories.find((item) => item.label === value);
+              syncQuery({
+                ...query,
+                category: value === "All Categories" ? undefined : match?.slug ?? value,
+                page: 1,
+              });
+            }}
           />
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          {quickFilters.map((item) => (
-            <span
-              key={item}
-              className="rounded-full border border-[color:rgba(27,77,62,0.08)] bg-white px-4 py-2 text-sm text-[var(--gray-text)] shadow-[var(--shadow-sm)]"
-            >
-              {item}
-            </span>
-          ))}
-          <span className="inline-flex items-center gap-2 rounded-full border border-[color:rgba(201,168,76,0.24)] bg-[var(--gold-subtle)] px-4 py-2 text-sm font-medium text-[var(--gold-dark)]">
-            <Star className="h-4 w-4 fill-[var(--gold)] text-[var(--gold)]" />
-            Curated for Mehndi, Barat, and Walima
-          </span>
-        </div>
-
-        <div className="mt-12 grid gap-8 xl:grid-cols-[1fr_280px]">
-          <VendorGrid vendors={filtered} />
-
-          <aside className="h-fit rounded-[28px] border border-[color:rgba(27,77,62,0.08)] bg-white p-6 shadow-[var(--shadow-sm)]">
-            <h2 className="font-heading text-2xl text-[var(--dark)]">Filters</h2>
-            <div className="mt-6 space-y-6">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--gray-text)]">
-                  Category
-                </p>
-                <div className="mt-3 space-y-2 text-sm text-[var(--gray-text)]">
-                  {marketplaceCategories.map((item) => (
-                    <label key={item} className="flex items-center justify-between">
-                      <span>{item}</span>
-                      <input
-                        type="radio"
-                        checked={category === item}
-                        onChange={() => setCategory(item)}
-                      />
-                    </label>
-                  ))}
+        <div className="mt-8 grid gap-8 xl:grid-cols-[1fr_280px]">
+          <div className="space-y-6">
+            <Card>
+              <CardContent className="flex flex-col gap-4 px-6 py-5 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--dark)]">
+                    {results.total} vendors found
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--gray-text)]">
+                    Sort and compare before moving into the booking request step.
+                  </p>
                 </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--gray-text)]">
-                  City
-                </p>
-                <div className="mt-3 space-y-2 text-sm text-[var(--gray-text)]">
-                  {marketplaceCities.map((item) => (
-                    <label key={item} className="flex items-center justify-between">
-                      <span>{item}</span>
-                      <input
-                        type="radio"
-                        checked={city === item}
-                        onChange={() => setCity(item)}
-                      />
-                    </label>
-                  ))}
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-[var(--gray-text)]" htmlFor="sort">
+                    Sort
+                  </label>
+                  <select
+                    id="sort"
+                    value={query.sort ?? "rating"}
+                    onChange={(event) =>
+                      syncQuery({
+                        ...query,
+                        sort: event.target.value as MarketplaceSort,
+                        page: 1,
+                      })
+                    }
+                    className="h-11 rounded-[16px] border border-[color:rgba(27,77,62,0.1)] bg-[var(--warm-white)] px-4 text-sm text-[var(--dark)]"
+                  >
+                    <option value="rating">Highest Rating</option>
+                    <option value="price_asc">Lowest Price</option>
+                    <option value="price_desc">Highest Price</option>
+                    <option value="newest">Newest</option>
+                  </select>
                 </div>
+              </CardContent>
+            </Card>
+
+            {loading ? (
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <VendorCardSkeleton key={index} />
+                ))}
               </div>
-            </div>
-          </aside>
+            ) : results.data.length > 0 ? (
+              <VendorGrid vendors={results.data} />
+            ) : (
+              <Card>
+                <CardContent className="px-6 py-10 text-center text-[var(--gray-text)]">
+                  No vendors matched these filters. Try removing a city, category, or price constraint.
+                </CardContent>
+              </Card>
+            )}
+
+            {results.totalPages > 1 ? (
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <Button
+                  variant="outline"
+                  disabled={(query.page ?? 1) <= 1}
+                  onClick={() => syncQuery({ ...query, page: Math.max(1, (query.page ?? 1) - 1) })}
+                >
+                  Prev
+                </Button>
+                {Array.from({ length: results.totalPages }).map((_, index) => {
+                  const page = index + 1;
+                  return (
+                    <Button
+                      key={page}
+                      variant={(query.page ?? 1) === page ? "gold" : "outline"}
+                      onClick={() => syncQuery({ ...query, page })}
+                    >
+                      {page}
+                    </Button>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  disabled={(query.page ?? 1) >= results.totalPages}
+                  onClick={() =>
+                    syncQuery({
+                      ...query,
+                      page: Math.min(results.totalPages, (query.page ?? 1) + 1),
+                    })
+                  }
+                >
+                  Next
+                </Button>
+              </div>
+            ) : null}
+          </div>
+
+          <FilterSidebar
+            categories={categories}
+            cities={cities}
+            values={query}
+            onChange={syncQuery}
+          />
         </div>
       </div>
     </main>

@@ -140,6 +140,7 @@ model VendorProfile {
   isPublic       Boolean      @default(true)
   status         VendorStatus @default(PENDING)
   profileCompletion Int       @default(0)
+  profileViews   Int          @default(0)
 
   avgRating      Float        @default(0)
   totalReviews   Int          @default(0)

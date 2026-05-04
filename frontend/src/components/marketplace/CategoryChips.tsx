@@ -21,8 +21,8 @@ export function CategoryChips({
             onClick={() => onChange(category)}
             className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
               active
-                ? "border-[var(--primary)] bg-[var(--primary)] text-white"
-                : "border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white"
+                ? "border-[var(--gold)] bg-[var(--gold)] text-[var(--dark)]"
+                : "border-[var(--primary)] text-[var(--primary)] hover:border-[var(--gold)] hover:text-[var(--gold-dark)]"
             }`}
           >
             {category}

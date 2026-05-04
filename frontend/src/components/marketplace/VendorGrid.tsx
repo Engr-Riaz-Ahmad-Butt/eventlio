@@ -1,8 +1,8 @@
-import type { MarketplaceVendor } from "@/data/mock";
+import type { MarketplaceVendorListItem } from "@/types";
 import { VendorCard } from "@/components/marketplace/VendorCard";
 
 type VendorGridProps = {
-  vendors: MarketplaceVendor[];
+  vendors: MarketplaceVendorListItem[];
 };
 
 export function VendorGrid({ vendors }: VendorGridProps) {

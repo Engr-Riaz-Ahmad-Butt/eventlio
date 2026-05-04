@@ -11,6 +11,7 @@ type SearchBarProps = {
   setCategory: (value: string) => void;
   cities: string[];
   categories: string[];
+  onSubmit?: () => void;
 };
 
 export function SearchBar({
@@ -22,6 +23,7 @@ export function SearchBar({
   setCategory,
   cities,
   categories,
+  onSubmit,
 }: SearchBarProps) {
   return (
     <div className="rounded-[28px] border border-[color:rgba(27,77,62,0.08)] bg-white p-4 shadow-[var(--shadow-md)]">
@@ -42,7 +44,6 @@ export function SearchBar({
           onChange={(event) => setCategory(event.target.value)}
           className="h-14 rounded-[20px] border border-[color:rgba(27,77,62,0.1)] bg-[var(--warm-white)] px-4 text-sm text-[var(--dark)]"
         >
-          <option value="All Categories">All Categories</option>
           {categories.map((item) => (
             <option key={item} value={item}>
               {item}
@@ -54,11 +55,15 @@ export function SearchBar({
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Dhundho..."
+            placeholder="Photographer, bridal makeup, decor..."
             className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--gray-text)]"
           />
         </div>
-        <button className="h-14 rounded-full bg-[var(--gold)] px-7 text-sm font-semibold text-[var(--dark)] transition hover:bg-[var(--gold-light)]">
+        <button
+          type="button"
+          onClick={onSubmit}
+          className="h-14 rounded-full bg-[var(--gold)] px-7 text-sm font-semibold text-[var(--dark)] transition hover:bg-[var(--gold-light)]"
+        >
           Search
         </button>
       </div>

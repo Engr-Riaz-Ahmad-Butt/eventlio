@@ -184,6 +184,94 @@ export interface PaginatedResponse<T> {
   };
 }
 
+export type MarketplaceSort = "rating" | "price_asc" | "price_desc" | "newest";
+
+export interface MarketplaceCategory {
+  id: string;
+  slug: string;
+  label: string;
+  icon?: string | null;
+  count: number;
+}
+
+export interface MarketplaceCity {
+  city: string;
+  count: number;
+}
+
+export interface MarketplaceVendorListItem {
+  id: string;
+  slug: string;
+  businessName: string;
+  city: string;
+  tagline?: string | null;
+  description?: string | null;
+  coverImage?: string | null;
+  logo?: string | null;
+  isFeatured: boolean;
+  isVerified: boolean;
+  avgRating: number;
+  totalReviews: number;
+  profileViews: number;
+  createdAt: string;
+  startingPrice: number;
+  category: { name: string; slug: string } | null;
+  categories: Array<{ name: string; slug: string }>;
+}
+
+export interface MarketplaceReview {
+  id: string;
+  rating: number;
+  comment?: string | null;
+  reply?: string | null;
+  createdAt: string;
+  client?: {
+    name: string;
+    avatar?: string | null;
+  };
+}
+
+export interface MarketplaceVendorDetail extends MarketplaceVendorListItem {
+  address?: string | null;
+  phone?: string | null;
+  whatsappNumber?: string | null;
+  instagramUrl?: string | null;
+  facebookUrl?: string | null;
+  websiteUrl?: string | null;
+  serviceAreas: ServiceArea[];
+  packages: Array<{
+    id: string;
+    title: string;
+    description?: string | null;
+    price: number;
+    discountPrice?: number | null;
+    duration?: string | null;
+    includedServices: string[];
+  }>;
+  gallery: VendorGallery[];
+  reviews: MarketplaceReview[];
+}
+
+export interface MarketplaceVendorResults {
+  data: MarketplaceVendorListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface MarketplaceVendorQuery {
+  category?: string;
+  city?: string;
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  rating?: number;
+  sort?: MarketplaceSort;
+  page?: number;
+  limit?: number;
+}
+
 // ── Auth ─────────────────────────────────────────────────────────
 export interface AuthTokens {
   accessToken: string;
